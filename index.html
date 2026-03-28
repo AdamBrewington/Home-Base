@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
+<head><meta name="ourgrowth-sync-url" content="https://ourgrowth-sync.adambrewington33.workers.dev"><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <meta name="theme-color" content="#fffdf9">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="ourgrowth-sync-url" content="">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -157,6 +157,9 @@
   .goal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   .goal-name { font-size: 0.9rem; }
   .goal-pct { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--accent); }
+  .mini-btn { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 9px; border-radius: 14px; cursor: pointer; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.82); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-weight: 500; }
+  .mini-btn:active { transform: scale(0.97); }
+  .sync-indicator { font-size: 0.62rem; color: var(--text-muted); text-align: center; padding: 6px 16px 0; }
 
   .acct-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 8px; }
   .acct-item:last-child { border-bottom: none; }
@@ -240,6 +243,7 @@
 </div>
 
 <div id="app" style="display:none;">
+<div class="sync-indicator" id="sync-indicator">Local only</div>
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dash">
@@ -455,21 +459,6 @@
   </div>
 </div>
 
-<!-- ACCOUNTS -->
-<div class="page" id="page-accounts">
-  <div class="page-header"><div class="page-title">Accounts</div></div>
-  <div class="content">
-    <p style="font-size:0.71rem;color:var(--text-muted);padding:0 2px 12px;">Reference only — store real passwords in a password manager</p>
-    <div class="card" id="accounts-list"><div class="empty">No accounts added yet</div></div>
-    <div class="add-row" style="flex-wrap:wrap;gap:8px;">
-      <input class="add-input" id="acct-name-in" placeholder="Service…" style="min-width:110px;">
-      <input class="add-input" id="acct-owner-in" placeholder="Owner…" style="max-width:100px;">
-      <input class="add-input" id="acct-renew-in" placeholder="Renewal" style="max-width:82px;">
-      <button class="add-btn" onclick="addAcct()">+</button>
-    </div>
-  </div>
-</div>
-
 <!-- BOTTOM NAV — all 8 pages accessible -->
 <nav class="bottom-nav">
   <button class="nav-item active" id="nav-dash" onclick="navTo('dash')">
@@ -493,9 +482,6 @@
   <button class="nav-item" id="nav-goals" onclick="navTo('goals')">
     <span class="nav-icon">🎯</span><span class="nav-label">Goals</span>
   </button>
-  <button class="nav-item" id="nav-accounts" onclick="navTo('accounts')">
-    <span class="nav-icon">🔑</span><span class="nav-label">Accts</span>
-  </button>
 </nav>
 
 </div>
@@ -505,6 +491,7 @@
 var PIN_KEY_ADAM = 'ourgrowth_pin_adam';
 var PIN_KEY_BRIT = 'ourgrowth_pin_brit';
 var SESSION_KEY = 'ourgrowth_session';
+var SESSION_MS = 24 * 60 * 60 * 1000;
 var pinBuffer = '';
 var pinMode = ''; // 'setup', 'confirm', 'check'
 var pinSetupValue = '';
@@ -512,16 +499,21 @@ var activeUser = ''; // 'adam' or 'brit'
 var activeUserName = ''; // display name
 
 (function initPin() {
-  // Check if already unlocked this session
-  var session = sessionStorage.getItem(SESSION_KEY);
+  // Check if still unlocked within the last 24 hours
+  var session = localStorage.getItem(SESSION_KEY);
   if (session) {
     try {
       var s = JSON.parse(session);
-      activeUser = s.user;
-      activeUserName = s.name;
-      unlock();
-      return;
-    } catch(e) {}
+      if (s && s.expiresAt && Date.now() < s.expiresAt) {
+        activeUser = s.user;
+        activeUserName = s.name;
+        unlock(true);
+        return;
+      }
+      localStorage.removeItem(SESSION_KEY);
+    } catch(e) {
+      localStorage.removeItem(SESSION_KEY);
+    }
   }
   // Show user selection
   document.getElementById('lock-step-user').style.display = '';
@@ -620,10 +612,16 @@ function pinWrong(msg) {
   setTimeout(function() { updateDots(); }, 500);
 }
 
-function unlock() {
+function unlock(skipWrite) {
   document.getElementById('lock-screen').classList.add('unlocked');
   document.getElementById('app').style.display = '';
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: activeUser, name: activeUserName }));
+  if (!skipWrite) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      user: activeUser,
+      name: activeUserName,
+      expiresAt: Date.now() + SESSION_MS
+    }));
+  }
   // Personalize greeting
   updateGreeting();
 }
@@ -660,32 +658,160 @@ function esc(str) {
   return d.innerHTML;
 }
 
-// ── localStorage persistence ──
-const STORAGE_KEY = 'ourgrowth_v3';
-function saveAll() {
-  const data = { tasks, notes, groceryItems, discussItems, bills, subs, goalsFinancial, goalsLife, goalsRelationship, accounts, chores, projects, plans };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+// ── Local persistence + optional cloud sync ──
+const STORAGE_KEY = 'ourgrowth_v4';
+const SYNC_URL_KEY = 'ourgrowth_sync_url';
+const DEVICE_KEY = 'ourgrowth_device_id';
+const SYNC_POLL_MS = 15000;
+let syncTimer = null;
+let lastSyncedAt = 0;
+let localStateUpdatedAt = 0;
+let syncInFlight = false;
+
+function getDeviceId() {
+  var existing = localStorage.getItem(DEVICE_KEY);
+  if (existing) return existing;
+  var id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  localStorage.setItem(DEVICE_KEY, id);
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+
+function getSyncUrl() {
+  var meta = document.querySelector('meta[name="ourgrowth-sync-url"]');
+  if (meta && meta.content) return meta.content.trim();
+  return (localStorage.getItem(SYNC_URL_KEY) || '').trim();
+}
+function setSyncStatus(msg) {
+  var el = document.getElementById('sync-indicator');
+  if (el) el.textContent = msg;
+}
+function buildState() {
+  return {
+    tasks, notes, groceryItems, discussItems, bills, subs,
+    goalsFinancial, goalsLife, goalsRelationship,
+    chores, projects, plans
+  };
+}
+function applyState(d) {
+  tasks = Array.isArray(d.tasks) ? d.tasks : [];
+  notes = Array.isArray(d.notes) ? d.notes : [];
+  groceryItems = Array.isArray(d.groceryItems) ? d.groceryItems : [];
+  discussItems = Array.isArray(d.discussItems) ? d.discussItems : [];
+  bills = Array.isArray(d.bills) ? d.bills : [];
+  subs = Array.isArray(d.subs) ? d.subs : [];
+  goalsFinancial = Array.isArray(d.goalsFinancial) ? d.goalsFinancial : [];
+  goalsLife = Array.isArray(d.goalsLife) ? d.goalsLife : [];
+  goalsRelationship = Array.isArray(d.goalsRelationship) ? d.goalsRelationship : [];
+  chores = Array.isArray(d.chores) ? d.chores : [];
+  projects = Array.isArray(d.projects) ? d.projects : [];
+  plans = Array.isArray(d.plans) ? d.plans : [];
+}
+function saveAll(skipSync) {
+  localStateUpdatedAt = Date.now();
+  const payload = {
+    updatedAt: localStateUpdatedAt,
+    deviceId: DEVICE_ID,
+    data: buildState()
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch(e) {}
+  if (!skipSync) queueSyncPush();
 }
 function loadAll() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    const d = JSON.parse(raw);
-    tasks = d.tasks || [];
-    notes = d.notes || [];
-    groceryItems = d.groceryItems || [];
-    discussItems = d.discussItems || [];
-    bills = d.bills || [];
-    subs = d.subs || [];
-    goalsFinancial = d.goalsFinancial || [];
-    goalsLife = d.goalsLife || [];
-    goalsRelationship = d.goalsRelationship || [];
-    accounts = d.accounts || [];
-    chores = d.chores || [];
-    projects = d.projects || [];
-    plans = d.plans || [];
+    const payload = JSON.parse(raw);
+    localStateUpdatedAt = payload.updatedAt || 0;
+    applyState(payload.data || payload || {});
   } catch(e) {}
 }
+async function syncPull() {
+  const url = getSyncUrl();
+  if (!url || syncInFlight) {
+    setSyncStatus(url ? 'Sync busy…' : 'Local only');
+    return;
+  }
+  syncInFlight = true;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('pull failed');
+    const payload = await res.json();
+    if (!payload || !payload.data) {
+      setSyncStatus('Cloud ready');
+      return;
+    }
+    const remoteUpdatedAt = payload.updatedAt || 0;
+    if (remoteUpdatedAt > localStateUpdatedAt) {
+      applyState(payload.data);
+      localStateUpdatedAt = remoteUpdatedAt;
+      lastSyncedAt = remoteUpdatedAt;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch(e) {}
+      renderAll();
+      setSyncStatus('Pulled latest changes');
+    } else {
+      setSyncStatus('In sync');
+    }
+  } catch (e) {
+    setSyncStatus('Sync unavailable');
+  } finally {
+    syncInFlight = false;
+  }
+}
+async function syncPushNow() {
+  const url = getSyncUrl();
+  if (!url || syncInFlight) {
+    setSyncStatus(url ? 'Sync busy…' : 'Local only');
+    return;
+  }
+  syncInFlight = true;
+  try {
+    const payload = {
+      updatedAt: localStateUpdatedAt || Date.now(),
+      deviceId: DEVICE_ID,
+      data: buildState()
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('push failed');
+    const saved = await res.json();
+    lastSyncedAt = saved.updatedAt || payload.updatedAt;
+    setSyncStatus('Changes synced');
+  } catch (e) {
+    setSyncStatus('Saved locally only');
+  } finally {
+    syncInFlight = false;
+  }
+}
+function queueSyncPush() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncPushNow, 500);
+}
+function startSyncLoop() {
+  if (!getSyncUrl()) {
+    setSyncStatus('Local only');
+    return;
+  }
+  setSyncStatus('Cloud sync enabled');
+  syncPull();
+  setInterval(syncPull, SYNC_POLL_MS);
+}
+window.addEventListener('storage', function(e) {
+  if (e.key === STORAGE_KEY && e.newValue) {
+    try {
+      const payload = JSON.parse(e.newValue);
+      const changedAt = payload.updatedAt || 0;
+      if (changedAt > localStateUpdatedAt) {
+        localStateUpdatedAt = changedAt;
+        applyState(payload.data || {});
+        renderAll();
+      }
+    } catch(err) {}
+  }
+});
 
 // ── Quotes ──
 const QUOTES = [
@@ -709,7 +835,6 @@ let subs = [];
 let goalsFinancial = [];
 let goalsLife = [];
 let goalsRelationship = [];
-let accounts = [];
 let chores = [];
 let projects = [];
 let plans = [];
@@ -726,6 +851,7 @@ let currentOwner = "adam";
   document.getElementById("dash-quote-author").textContent = q.a ? "— " + q.a : "";
   updateGreeting();
   renderAll();
+  startSyncLoop();
   // Refresh greeting every 60s so it stays accurate if tab stays open
   setInterval(updateGreeting, 60000);
 })();
@@ -745,7 +871,6 @@ function renderAll() {
   renderChores();
   renderProjects();
   renderPlans();
-  renderAccounts();
   updateNextEvent();
 }
 
@@ -959,6 +1084,26 @@ function updateGoalLabels() {
   document.getElementById("goal-unit-in").placeholder = cat === 'financial' ? 'Unit ($)' : 'Unit (books, dates…)';
 }
 
+
+function updateGoal(cat, i) {
+  var arr = cat==="financial" ? goalsFinancial : cat==="life" ? goalsLife : goalsRelationship;
+  var g = arr[i];
+  if (!g) return;
+  var nextCurrent = prompt("Update current progress for " + g.name, g.current);
+  if (nextCurrent === null) return;
+  var nextTarget = prompt("Update target for " + g.name, g.target);
+  if (nextTarget === null) return;
+  var nextUnit = prompt("Update unit for " + g.name, g.unit || (cat === "financial" ? "$" : ""));
+  if (nextUnit === null) return;
+  g.current = parseFloat(nextCurrent) || 0;
+  g.target = parseFloat(nextTarget) || 0;
+  g.unit = (nextUnit || "").trim() || (cat === "financial" ? "$" : "");
+  renderGoalsAll();
+  renderDashGoals();
+  renderSavingsGoals();
+  saveAll();
+}
+
 function deleteGoal(cat, i) {
   if (cat==="financial") goalsFinancial.splice(i,1);
   else if (cat==="life") goalsLife.splice(i,1);
@@ -985,6 +1130,7 @@ function renderGoalSection(elId, arr, cls, catKey) {
       '<div class="goal-top">' +
         '<span class="goal-name">' + esc(g.name) + '</span>' +
         '<span style="display:flex;align-items:center;gap:8px;">' +
+          '<button class="mini-btn" onclick="updateGoal(\''+catKey+'\','+i+')">Update</button>' +
           '<span class="goal-pct">' + pct + '%</span>' +
           '<button class="del-btn" onclick="deleteGoal(\''+catKey+'\','+i+')">×</button>' +
         '</span>' +
@@ -1012,6 +1158,15 @@ function renderDashGoals() {
 }
 
 // ── Notes ──
+
+function notesTab(tab, btn) {
+  document.querySelectorAll("#page-notes .tab-pill").forEach(function(p) { p.classList.remove("active"); });
+  btn.classList.add("active");
+  ["quick","grocery","discuss"].forEach(function(t) {
+    document.getElementById("notes-" + t).style.display = t === tab ? "block" : "none";
+  });
+}
+
 function renderNotes() {
   var list = document.getElementById("notes-list");
   if (!notes.length) { list.innerHTML = '<div class="empty">Tap below to add a note</div>'; return; }
@@ -1190,31 +1345,3 @@ function addProject() {
   saveAll();
 }
 
-// ── Accounts ──
-function renderAccounts() {
-  var list = document.getElementById("accounts-list");
-  if (!accounts.length) { list.innerHTML = '<div class="empty">No accounts added yet</div>'; return; }
-  list.innerHTML = accounts.map(function(a, i) {
-    return '<div class="acct-item">' +
-      '<div style="flex:1;min-width:0;"><div class="acct-name">' + esc(a.name) + '</div><div class="acct-sub">' + esc(a.owner||'') + '</div></div>' +
-      '<span class="acct-renew">' + esc(a.renew||'—') + '</span>' +
-      '<button class="del-btn" onclick="accounts.splice('+i+',1);renderAccounts();saveAll()">×</button>' +
-    '</div>';
-  }).join("");
-}
-
-function addAcct() {
-  var name = document.getElementById("acct-name-in").value.trim();
-  var owner = document.getElementById("acct-owner-in").value.trim();
-  var renew = document.getElementById("acct-renew-in").value.trim();
-  if (!name) return;
-  accounts.push({ name: name, owner: owner, renew: renew });
-  document.getElementById("acct-name-in").value = "";
-  document.getElementById("acct-owner-in").value = "";
-  document.getElementById("acct-renew-in").value = "";
-  renderAccounts();
-  saveAll();
-}
-</script>
-</body>
-</html>
