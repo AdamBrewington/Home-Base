@@ -7,928 +7,429 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: rgba(255,255,255,0.04);
-    --surface-hover: rgba(255,255,255,0.07);
-    --border: rgba(255,255,255,0.08);
-    --border-strong: rgba(255,255,255,0.14);
-    --text: #e8e2d9;
-    --text-muted: rgba(232,226,217,0.45);
-    --text-dim: rgba(232,226,217,0.25);
-    --accent: #c9a96e;
-    --accent-soft: rgba(201,169,110,0.15);
-    --accent-dim: rgba(201,169,110,0.08);
-    --rose: #d4857a;
-    --rose-soft: rgba(212,133,122,0.12);
-    --green: #7aab8a;
-    --green-soft: rgba(122,171,138,0.12);
-    --nav-h: 64px;
-    --radius: 14px;
-    --radius-sm: 9px;
+    --bg: #fffdf9;
+    --surface: rgba(255,255,255,0.92);
+    --border: rgba(0,0,0,0.07);
+    --border-strong: rgba(0,0,0,0.12);
+    --text: #1c1a16;
+    --text-muted: rgba(28,26,22,0.48);
+    --text-dim: rgba(28,26,22,0.28);
+    --accent: #c49a3c;
+    --accent-soft: rgba(196,154,60,0.13);
+    --accent-dim: rgba(196,154,60,0.07);
+    --rose: #c05a6a;
+    --rose-soft: rgba(192,90,106,0.1);
+    --green: #3d9264;
+    --green-soft: rgba(61,146,100,0.1);
+    --nav-h: 66px;
+    --radius: 18px;
+    --radius-sm: 11px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
+  .bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-canvas::before { content: ''; position: absolute; width: 800px; height: 800px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,215,100,0.24) 0%, transparent 60%); top: -280px; left: -200px; animation: dA 24s ease-in-out infinite alternate; }
+  .bg-canvas::after { content: ''; position: absolute; width: 650px; height: 650px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,150,170,0.16) 0%, transparent 60%); bottom: -150px; right: -150px; animation: dB 30s ease-in-out infinite alternate; }
+  .bg-mid { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(ellipse, rgba(130,210,170,0.13) 0%, transparent 60%); top: 38%; left: 50%; transform: translate(-50%,-50%); animation: dC 38s ease-in-out infinite alternate; }
+  @keyframes dA { from{transform:translate(0,0) scale(1)} to{transform:translate(70px,50px) scale(1.18)} }
+  @keyframes dB { from{transform:translate(0,0) scale(1)} to{transform:translate(-55px,-35px) scale(1.12)} }
+  @keyframes dC { from{transform:translate(-50%,-50%) scale(1)} to{transform:translate(-50%,-50%) scale(1.35)} }
 
-  /* ── Atmospheric Background ── */
-  .bg-canvas {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .bg-canvas::before {
-    content: '';
-    position: absolute;
-    width: 700px; height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(201,169,110,0.07) 0%, transparent 70%);
-    top: -200px; left: -150px;
-    animation: driftA 22s ease-in-out infinite alternate;
-  }
-  .bg-canvas::after {
-    content: '';
-    position: absolute;
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(212,133,122,0.06) 0%, transparent 70%);
-    bottom: -100px; right: -100px;
-    animation: driftB 28s ease-in-out infinite alternate;
-  }
-  .bg-mid {
-    position: absolute;
-    width: 500px; height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(122,171,138,0.04) 0%, transparent 70%);
-    top: 40%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation: driftC 35s ease-in-out infinite alternate;
-  }
-  .bg-grain {
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    opacity: 0.4;
-  }
-  @keyframes driftA { from { transform: translate(0,0) scale(1); } to { transform: translate(60px,40px) scale(1.15); } }
-  @keyframes driftB { from { transform: translate(0,0) scale(1); } to { transform: translate(-50px,-30px) scale(1.1); } }
-  @keyframes driftC { from { transform: translate(-50%,-50%) scale(1); } to { transform: translate(-50%,-50%) scale(1.3); } }
-
-  /* ── Layout ── */
   #app { position: relative; z-index: 1; }
+  .page { display: none; min-height: 100vh; padding-bottom: calc(var(--nav-h) + 20px); }
+  .page.active { display: block; animation: fadeUp 0.26s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-  .page { display: none; min-height: 100vh; padding: 0 0 calc(var(--nav-h) + 16px); }
-  .page.active { display: block; animation: fadeUp 0.3s ease; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-  .page-header {
-    padding: 52px 20px 20px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .page-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2.2rem;
-    font-weight: 300;
-    letter-spacing: -0.02em;
-    color: var(--text);
-    line-height: 1;
-  }
+  .page-header { padding: 54px 20px 18px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .page-title { font-family: 'Cormorant Garamond', serif; font-size: 2.3rem; font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
   .page-title em { font-style: italic; color: var(--accent); }
-  .page-date {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-weight: 300;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
+  .page-date { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.07em; text-transform: uppercase; }
   .content { padding: 0 16px; }
 
-  /* ── Cards ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .card:active { background: var(--surface-hover); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
+  .card-label { font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; margin-bottom: 10px; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 400; color: var(--text-muted); letter-spacing: 0.04em; margin: 22px 0 8px; padding: 0 2px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .card-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-bottom: 10px;
-  }
-
-  .section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    font-weight: 400;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-    margin: 20px 0 8px;
-    padding: 0 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Dashboard ── */
-  .greeting {
-    padding: 52px 20px 8px;
-  }
-  .greeting-sub {
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-  .greeting-main {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2.6rem;
-    font-weight: 300;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
+  .greeting { padding: 54px 20px 10px; }
+  .greeting-sub { font-size: 0.7rem; letter-spacing: 0.11em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .greeting-main { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; }
   .greeting-main em { font-style: italic; color: var(--accent); }
 
-  .dash-quote {
-    margin: 0 16px 16px;
-    padding: 14px 18px;
-    background: var(--accent-dim);
-    border-left: 2px solid var(--accent);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  }
-  .dash-quote p {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    font-style: italic;
-    color: var(--accent);
-    font-weight: 300;
-    line-height: 1.5;
-  }
-  .dash-quote span {
-    display: block;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-top: 6px;
-    font-style: normal;
-  }
+  .dash-quote { margin: 0 16px 16px; padding: 14px 18px; background: var(--accent-dim); border-left: 2.5px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .dash-quote p { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-style: italic; color: var(--accent); font-weight: 400; line-height: 1.5; }
+  .dash-quote span { display: block; font-size: 0.63rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; }
 
   .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-  }
-  .stat-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 300;
-    line-height: 1;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-  .stat-num.accent { color: var(--accent); }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 8px rgba(0,0,0,0.04); transition: transform 0.14s, box-shadow 0.14s; }
+  .stat-card.clickable { cursor: pointer; }
+  .stat-card.clickable:active { transform: scale(0.97); box-shadow: 0 3px 16px rgba(0,0,0,0.09); }
+  .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; line-height: 1; margin-bottom: 4px; color: var(--text); }
+  .stat-num.gold { color: var(--accent); }
   .stat-num.rose { color: var(--rose); }
   .stat-num.green { color: var(--green); }
-  .stat-label { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .stat-label { font-size: 0.67rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .stat-hint { font-size: 0.6rem; color: var(--accent); margin-top: 5px; opacity: 0.8; }
 
-  /* ── Task Items ── */
-  .task-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
+  /* A fix: full row tappable */
+  .task-item { display: flex; align-items: center; gap: 12px; padding: 13px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 10px; margin: 0 -10px; transition: background 0.14s; user-select: none; }
   .task-item:last-child { border-bottom: none; }
-  .task-check {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1.5px solid var(--border-strong);
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-    background: transparent;
-    cursor: pointer;
-  }
+  .task-item:active { background: rgba(196,154,60,0.07); }
+  .task-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-strong); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: transparent; pointer-events: none; }
   .task-check.done { background: var(--accent); border-color: var(--accent); }
-  .task-check.done::after { content: '✓'; font-size: 11px; color: #0d1117; font-weight: 600; }
-  .task-text { font-size: 0.9rem; flex: 1; line-height: 1.3; }
+  .task-check.done::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 600; }
+  .task-text { font-size: 0.9rem; flex: 1; line-height: 1.3; pointer-events: none; }
   .task-text.done { color: var(--text-muted); text-decoration: line-through; }
-  .task-tag {
-    font-size: 0.6rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding: 3px 7px;
-    border-radius: 20px;
-    font-weight: 500;
-  }
+  .task-tag { font-size: 0.59rem; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; font-weight: 500; flex-shrink: 0; pointer-events: none; }
   .tag-adam { background: var(--accent-soft); color: var(--accent); }
   .tag-brit { background: var(--rose-soft); color: var(--rose); }
   .tag-home { background: var(--green-soft); color: var(--green); }
-  .tag-both { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+  .tag-both { background: rgba(0,0,0,0.05); color: var(--text-muted); }
 
-  /* ── Add Input ── */
-  .add-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .add-input {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 11px 14px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .add-input:focus { border-color: var(--border-strong); }
+  .add-row { display: flex; gap: 8px; margin-top: 14px; }
+  .add-input { flex: 1; background: rgba(255,255,255,0.95); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none; }
+  .add-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .add-input::placeholder { color: var(--text-dim); }
-  .add-btn {
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 0 16px;
-    color: #0d1117;
-    font-size: 1.1rem;
-    cursor: pointer;
-    font-weight: 600;
-    transition: opacity 0.15s;
-  }
-  .add-btn:active { opacity: 0.8; }
+  select.add-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; cursor: pointer; }
+  .add-btn { background: var(--accent); border: none; border-radius: var(--radius-sm); padding: 0 18px; color: #fff; font-size: 1.15rem; cursor: pointer; font-weight: 500; transition: opacity 0.15s, transform 0.1s; min-width: 46px; flex-shrink: 0; }
+  .add-btn:active { opacity: 0.82; transform: scale(0.95); }
 
-  /* ── Tab Pills ── */
-  .tab-row {
-    display: flex;
-    gap: 6px;
-    padding: 0 0 14px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
+  .tab-row { display: flex; gap: 6px; padding: 0 0 14px; overflow-x: auto; scrollbar-width: none; }
   .tab-row::-webkit-scrollbar { display: none; }
-  .tab-pill {
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.18s;
-  }
-  .tab-pill.active { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 500; }
+  .tab-pill { padding: 7px 15px; border-radius: 20px; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.75); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; white-space: nowrap; transition: all 0.18s; }
+  .tab-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
 
-  /* ── Money ── */
-  .bill-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
+  /* B fix: owner pill row */
+  .owner-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .owner-pill { padding: 7px 13px; border-radius: 20px; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.75); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.76rem; cursor: pointer; white-space: nowrap; transition: all 0.18s; }
+  .owner-pill.sel-adam { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+  .owner-pill.sel-brit { background: var(--rose-soft); border-color: var(--rose); color: var(--rose); font-weight: 500; }
+  .owner-pill.sel-home { background: var(--green-soft); border-color: var(--green); color: var(--green); font-weight: 500; }
+  .owner-pill.sel-both { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: var(--text); font-weight: 500; }
+
+  .bill-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .bill-item:last-child { border-bottom: none; }
   .bill-name { font-size: 0.88rem; }
-  .bill-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
-  .bill-amount {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem;
-    font-weight: 400;
-  }
+  .bill-sub { font-size: 0.67rem; color: var(--text-muted); margin-top: 2px; }
+  .bill-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; }
   .bill-amount.due { color: var(--rose); }
   .bill-amount.ok { color: var(--green); }
 
-  .goal-bar-wrap { margin: 6px 0 2px; }
-  .goal-bar-track {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .goal-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--accent);
-    transition: width 0.5s ease;
-  }
+  .goal-bar-track { height: 5px; background: rgba(0,0,0,0.07); border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }
+  .goal-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.5s ease; }
   .goal-bar-fill.rose { background: var(--rose); }
   .goal-bar-fill.green { background: var(--green); }
-  .goal-meta { display: flex; justify-content: space-between; margin-top: 6px; }
-  .goal-meta span { font-size: 0.68rem; color: var(--text-muted); }
-  .goal-meta strong { font-size: 0.68rem; color: var(--text); }
+  .goal-meta { display: flex; justify-content: space-between; }
+  .goal-meta span { font-size: 0.67rem; color: var(--text-muted); }
+  .goal-meta strong { font-size: 0.67rem; color: var(--text); }
 
-  /* ── Notes ── */
-  .note-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    position: relative;
-  }
-  .note-card textarea {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    line-height: 1.55;
-    resize: none;
-    outline: none;
-    min-height: 80px;
-  }
+  .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+  .note-card textarea { width: 100%; background: transparent; border: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.55; resize: none; outline: none; min-height: 80px; }
   .note-card textarea::placeholder { color: var(--text-dim); }
   .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-  .note-time { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.05em; }
+  .note-time { font-size: 0.61rem; color: var(--text-dim); }
   .note-del { font-size: 0.7rem; color: var(--text-dim); cursor: pointer; padding: 2px 4px; }
 
-  /* ── Plans ── */
-  .event-item {
-    display: flex;
-    gap: 14px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    align-items: flex-start;
-  }
+  .event-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
   .event-item:last-child { border-bottom: none; }
-  .event-date-block {
-    text-align: center;
-    min-width: 40px;
-    flex-shrink: 0;
-  }
-  .event-day {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
-    font-weight: 300;
-    line-height: 1;
-    color: var(--accent);
-  }
-  .event-mon { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .event-date-block { text-align: center; min-width: 40px; flex-shrink: 0; }
+  .event-day { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 300; line-height: 1; color: var(--accent); }
+  .event-mon { font-size: 0.59rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
   .event-title { font-size: 0.9rem; margin-bottom: 3px; }
-  .event-desc { font-size: 0.72rem; color: var(--text-muted); }
+  .event-desc { font-size: 0.71rem; color: var(--text-muted); }
 
-  /* ── Home ── */
-  .chore-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
+  .chore-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
   .chore-item:last-child { border-bottom: none; }
-  .chore-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+  .chore-icon { font-size: 1.1rem; width: 26px; text-align: center; }
   .chore-text { flex: 1; font-size: 0.88rem; }
-  .chore-freq { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .chore-freq { font-size: 0.61rem; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
 
-  /* ── Goals ── */
-  .goal-item {
-    display: flex;
-    flex-direction: column;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
-  }
+  .goal-item { display: flex; flex-direction: column; padding: 14px 0; border-bottom: 1px solid var(--border); }
   .goal-item:last-child { border-bottom: none; }
-  .goal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .goal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   .goal-name { font-size: 0.9rem; }
-  .goal-pct { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--accent); }
+  .goal-pct { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--accent); }
 
-  /* ── Accounts ── */
-  .acct-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
+  .acct-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .acct-item:last-child { border-bottom: none; }
   .acct-name { font-size: 0.9rem; margin-bottom: 3px; }
-  .acct-sub { font-size: 0.68rem; color: var(--text-muted); }
-  .acct-renew {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 3px 8px;
-    white-space: nowrap;
-  }
+  .acct-sub { font-size: 0.67rem; color: var(--text-muted); }
+  .acct-renew { font-size: 0.67rem; color: var(--text-muted); background: rgba(0,0,0,0.04); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; white-space: nowrap; }
 
-  /* ── Bottom Nav ── */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: var(--nav-h);
-    background: rgba(13,17,23,0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: stretch;
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 0);
-  }
-  .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    padding: 8px 4px;
-    transition: opacity 0.15s;
-  }
-  .nav-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.15s; }
-  .nav-label { font-size: 0.58rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; transition: color 0.15s; }
+  /* E fix: nav icons already present on all tabs */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(255,253,249,0.94); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border-top: 1px solid var(--border); display: flex; align-items: stretch; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0); }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: transparent; padding: 6px 2px; transition: opacity 0.15s; }
+  .nav-icon { font-size: 1.3rem; line-height: 1; transition: transform 0.15s; }
+  .nav-label { font-size: 0.54rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; transition: color 0.15s; }
   .nav-item.active .nav-label { color: var(--accent); }
-  .nav-item.active .nav-icon { transform: scale(1.1); }
-  .nav-item:active { opacity: 0.7; }
+  .nav-item.active .nav-icon { transform: scale(1.14); }
+  .nav-item:active { opacity: 0.65; }
 
-  /* ── Utilities ── */
-  .divider { height: 1px; background: var(--border); margin: 4px 0; }
-  .empty { text-align: center; padding: 32px 20px; color: var(--text-dim); font-size: 0.82rem; letter-spacing: 0.03em; }
-
-  /* ── Scrollbar ── */
+  .empty { text-align: center; padding: 28px 16px; color: var(--text-dim); font-size: 0.82rem; }
   ::-webkit-scrollbar { width: 0; }
 </style>
 </head>
 <body>
 
-<div class="bg-canvas">
-  <div class="bg-mid"></div>
-  <div class="bg-grain"></div>
-</div>
-
+<div class="bg-canvas"><div class="bg-mid"></div></div>
 <div id="app">
 
-  <!-- ══════════ DASHBOARD ══════════ -->
-  <div class="page active" id="page-dash">
-    <div class="greeting">
-      <div class="greeting-sub" id="dash-timegreeting">Good morning</div>
-      <div class="greeting-main">Adam <em>&</em><br>Brittany</div>
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="greeting">
+    <div class="greeting-sub" id="dash-greeting">Good morning</div>
+    <div class="greeting-main">Adam <em>&</em><br>Brittany</div>
+  </div>
+  <div class="content">
+    <div class="dash-quote">
+      <p id="dash-quote-text"></p>
+      <span id="dash-quote-author"></span>
     </div>
-    <div class="content">
-      <div class="dash-quote">
-        <p id="dash-quote-text">"A small daily task, if it be really daily, will beat the labours of a spasmodic Hercules."</p>
-        <span id="dash-quote-author">— Anthony Trollope</span>
+    <div class="stat-row">
+      <!-- G fix: Tasks Open clickable → tasks page -->
+      <div class="stat-card clickable" onclick="navTo('tasks')">
+        <div class="stat-num gold" id="dash-tasks-open">0</div>
+        <div class="stat-label">Tasks Open</div>
+        <div class="stat-hint">Tap to view →</div>
       </div>
+      <div class="stat-card">
+        <!-- F fix: done count updates on toggle -->
+        <div class="stat-num green" id="dash-tasks-done">0</div>
+        <div class="stat-label">Done Today</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <!-- G fix: Bills clickable → money page -->
+      <div class="stat-card clickable" onclick="navTo('money')">
+        <div class="stat-num rose" id="dash-bills-total">$0</div>
+        <div class="stat-label">Bills This Month</div>
+        <div class="stat-hint">Tap to view →</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num gold" id="dash-next-event">—</div>
+        <div class="stat-label">Next Event</div>
+      </div>
+    </div>
+    <div class="section-title">Up Next</div>
+    <div class="card" id="dash-task-preview"><div class="empty">Add tasks to see them here</div></div>
+    <div class="section-title">Goals Snapshot</div>
+    <div class="card" id="dash-goals-preview"><div class="empty">Add goals to track progress</div></div>
+  </div>
+</div>
 
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-num accent" id="dash-tasks-open">—</div>
-          <div class="stat-label">Tasks Open</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num green" id="dash-tasks-done">—</div>
-          <div class="stat-label">Done Today</div>
-        </div>
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+  <div class="page-header">
+    <div class="page-title">Tasks</div>
+    <div class="page-date" id="tasks-date"></div>
+  </div>
+  <div class="content">
+    <div class="tab-row" id="task-tabs">
+      <button class="tab-pill active" onclick="filterTasks('all',this)">All</button>
+      <button class="tab-pill" onclick="filterTasks('adam',this)">Adam</button>
+      <button class="tab-pill" onclick="filterTasks('brit',this)">Brittany</button>
+      <button class="tab-pill" onclick="filterTasks('home',this)">Home</button>
+      <button class="tab-pill" onclick="filterTasks('both',this)">Together</button>
+    </div>
+    <div class="card" id="task-list"><div class="empty">Add your first task below</div></div>
+    <!-- B fix: owner selector as pill buttons, not a broken select -->
+    <div style="margin-top:12px;">
+      <div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Assign to</div>
+      <div class="owner-row">
+        <button class="owner-pill sel-adam" id="op-adam" onclick="setOwner('adam',this)">👤 Adam</button>
+        <button class="owner-pill" id="op-brit" onclick="setOwner('brit',this)">👤 Brittany</button>
+        <button class="owner-pill" id="op-home" onclick="setOwner('home',this)">🏠 Home</button>
+        <button class="owner-pill" id="op-both" onclick="setOwner('both',this)">🤝 Together</button>
       </div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-num rose">$1,240</div>
-          <div class="stat-label">Bills This Month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num accent">Apr 18</div>
-          <div class="stat-label">Next Event</div>
-        </div>
-      </div>
-
-      <div class="section-title">Up Next</div>
-      <div class="card">
-        <div class="task-item">
-          <div class="task-check" onclick="toggleTask(this)"></div>
-          <div class="task-text">Pay rent</div>
-          <span class="task-tag tag-both">Both</span>
-        </div>
-        <div class="task-item">
-          <div class="task-check" onclick="toggleTask(this)"></div>
-          <div class="task-text">Schedule dentist appointments</div>
-          <span class="task-tag tag-brit">Brittany</span>
-        </div>
-        <div class="task-item">
-          <div class="task-check" onclick="toggleTask(this)"></div>
-          <div class="task-text">Review internet bill options</div>
-          <span class="task-tag tag-adam">Adam</span>
-        </div>
-      </div>
-
-      <div class="section-title">Goals Snapshot</div>
-      <div class="card">
-        <div class="card-label">Emergency Fund</div>
-        <div class="goal-bar-wrap">
-          <div class="goal-bar-track"><div class="goal-bar-fill green" style="width:54%"></div></div>
-        </div>
-        <div class="goal-meta"><span>$2,700 saved</span><strong>$5,000 target</strong></div>
-      </div>
-      <div class="card">
-        <div class="card-label">Trip Fund</div>
-        <div class="goal-bar-wrap">
-          <div class="goal-bar-track"><div class="goal-bar-fill" style="width:31%"></div></div>
-        </div>
-        <div class="goal-meta"><span>$620 saved</span><strong>$2,000 target</strong></div>
-      </div>
+    </div>
+    <div class="add-row">
+      <input class="add-input" id="task-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTask()">
+      <button class="add-btn" onclick="addTask()">+</button>
     </div>
   </div>
+</div>
 
-  <!-- ══════════ TASKS ══════════ -->
-  <div class="page" id="page-tasks">
-    <div class="page-header">
-      <div class="page-title">Tasks</div>
-      <div class="page-date" id="tasks-date"></div>
+<!-- MONEY -->
+<div class="page" id="page-money">
+  <div class="page-header"><div class="page-title">Money</div></div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab-pill active" onclick="moneyTab('bills',this)">Bills</button>
+      <button class="tab-pill" onclick="moneyTab('mgoals',this)">Goals</button>
+      <button class="tab-pill" onclick="moneyTab('subs',this)">Subscriptions</button>
     </div>
-    <div class="content">
-      <div class="tab-row" id="task-tabs">
-        <button class="tab-pill active" onclick="filterTasks('all',this)">All</button>
-        <button class="tab-pill" onclick="filterTasks('adam',this)">Adam</button>
-        <button class="tab-pill" onclick="filterTasks('brit',this)">Brittany</button>
-        <button class="tab-pill" onclick="filterTasks('home',this)">Home</button>
-        <button class="tab-pill" onclick="filterTasks('both',this)">Together</button>
-      </div>
-
-      <div class="card" id="task-list"></div>
-
+    <div id="money-bills">
+      <div class="section-title">This Month</div>
+      <div class="card" id="bills-list"><div class="empty">No bills yet — add one below</div></div>
       <div class="add-row">
-        <select class="add-input" id="task-owner" style="max-width:110px; padding:11px 10px; cursor:pointer;">
-          <option value="adam">Adam</option>
-          <option value="brit">Brittany</option>
-          <option value="home">Home</option>
-          <option value="both">Together</option>
+        <input class="add-input" placeholder="Bill name…" id="bill-name-in">
+        <input class="add-input" placeholder="$" style="max-width:72px;" id="bill-amt-in" type="number" inputmode="decimal">
+        <button class="add-btn" onclick="addBill()">+</button>
+      </div>
+    </div>
+    <div id="money-mgoals" style="display:none">
+      <div class="section-title">Savings Goals</div>
+      <div class="card" id="savings-list"><div class="empty">Add goals in the Goals tab</div></div>
+    </div>
+    <div id="money-subs" style="display:none">
+      <div class="section-title">Subscriptions</div>
+      <div class="card" id="subs-list"><div class="empty">No subscriptions yet</div></div>
+      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
+        <input class="add-input" placeholder="Service…" id="sub-name-in" style="min-width:110px;">
+        <input class="add-input" placeholder="Owner…" id="sub-owner-in" style="max-width:100px;">
+        <input class="add-input" placeholder="$" id="sub-amt-in" style="max-width:60px;" type="number" inputmode="decimal">
+        <button class="add-btn" onclick="addSub()">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="page" id="page-notes">
+  <div class="page-header"><div class="page-title">Notes</div></div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab-pill active" onclick="notesTab('quick',this)">Quick</button>
+      <button class="tab-pill" onclick="notesTab('grocery',this)">Grocery</button>
+      <button class="tab-pill" onclick="notesTab('discuss',this)">To Discuss</button>
+    </div>
+    <div id="notes-quick">
+      <div id="notes-list"><div class="empty">Tap below to add a note</div></div>
+      <button class="add-btn" onclick="addNote()" style="width:100%;margin-top:8px;padding:13px;border-radius:var(--radius-sm);font-size:0.85rem;font-family:'DM Sans',sans-serif;font-weight:400;">+ New Note</button>
+    </div>
+    <div id="notes-grocery" style="display:none">
+      <div class="card" id="grocery-list"><div class="empty">List is clear</div></div>
+      <div class="add-row" style="margin-top:10px;">
+        <input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')addGrocery()">
+        <button class="add-btn" onclick="addGrocery()">+</button>
+      </div>
+    </div>
+    <div id="notes-discuss" style="display:none">
+      <div class="card" id="discuss-list"><div class="empty">Nothing to discuss yet</div></div>
+      <div class="add-row" style="margin-top:10px;">
+        <input class="add-input" id="discuss-in" placeholder="Add topic…" onkeydown="if(event.key==='Enter')addDiscuss()">
+        <button class="add-btn" onclick="addDiscuss()">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div class="page" id="page-plans">
+  <div class="page-header"><div class="page-title">Plans</div></div>
+  <div class="content">
+    <div class="section-title">Upcoming</div>
+    <div class="card" id="plans-list"><div class="empty">No events yet</div></div>
+    <div class="section-title">Add Event</div>
+    <div class="card">
+      <div class="add-row" style="margin:0;flex-wrap:wrap;gap:8px;">
+        <input class="add-input" id="plan-date" placeholder="Apr 18" style="max-width:100px;">
+        <input class="add-input" id="plan-title" placeholder="What's happening…" style="flex:1;min-width:130px;">
+        <button class="add-btn" onclick="addPlan()">+</button>
+      </div>
+      <input class="add-input" id="plan-note" placeholder="Note (optional)" style="width:100%;margin-top:8px;">
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="page" id="page-home">
+  <div class="page-header"><div class="page-title">Home</div></div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab-pill active" onclick="homeTab('chores',this)">Chores</button>
+      <button class="tab-pill" onclick="homeTab('projects',this)">Projects</button>
+    </div>
+    <div id="home-chores">
+      <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
+      <div class="add-row">
+        <input class="add-input" id="chore-in" placeholder="Add chore…" onkeydown="if(event.key==='Enter')addChore()">
+        <select class="add-input" id="chore-freq" style="max-width:110px;flex-shrink:0;">
+          <option>Daily</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option>
         </select>
-        <input class="add-input" id="task-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTask()">
-        <button class="add-btn" onclick="addTask()">+</button>
+        <button class="add-btn" onclick="addChore()">+</button>
+      </div>
+    </div>
+    <div id="home-projects" style="display:none">
+      <div class="card" id="projects-list"><div class="empty">No projects yet</div></div>
+      <div class="add-row">
+        <input class="add-input" id="project-in" placeholder="Add project…" onkeydown="if(event.key==='Enter')addProject()">
+        <button class="add-btn" onclick="addProject()">+</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ══════════ MONEY ══════════ -->
-  <div class="page" id="page-money">
-    <div class="page-header">
-      <div class="page-title">Money</div>
-    </div>
-    <div class="content">
-      <div class="tab-row">
-        <button class="tab-pill active" onclick="moneyTab('bills',this)">Bills</button>
-        <button class="tab-pill" onclick="moneyTab('goals',this)">Goals</button>
-        <button class="tab-pill" onclick="moneyTab('subs',this)">Subscriptions</button>
+<!-- GOALS -->
+<div class="page" id="page-goals">
+  <div class="page-header"><div class="page-title">Goals</div></div>
+  <div class="content">
+    <div class="section-title">Financial</div>
+    <div class="card" id="goals-financial"><div class="empty">No financial goals yet</div></div>
+    <div class="section-title">Life</div>
+    <div class="card" id="goals-life"><div class="empty">No life goals yet</div></div>
+    <div class="section-title">Relationship</div>
+    <div class="card" id="goals-relationship"><div class="empty">No relationship goals yet</div></div>
+    <div class="section-title">Add Goal</div>
+    <div class="card">
+      <div class="add-row" style="margin:0;flex-wrap:wrap;gap:8px;">
+        <input class="add-input" id="goal-name-in" placeholder="Goal name…" style="flex:1;min-width:130px;">
+        <select class="add-input" id="goal-cat-in" style="max-width:130px;flex-shrink:0;">
+          <option value="financial">Financial</option>
+          <option value="life">Life</option>
+          <option value="relationship">Relationship</option>
+        </select>
       </div>
-
-      <div id="money-bills">
-        <div class="section-title">April</div>
-        <div class="card">
-          <div class="bill-item">
-            <div><div class="bill-name">Rent</div><div class="bill-sub">Due Apr 1</div></div>
-            <div class="bill-amount due">$900</div>
-          </div>
-          <div class="bill-item">
-            <div><div class="bill-name">Electric</div><div class="bill-sub">Due Apr 8 · Auto-pay</div></div>
-            <div class="bill-amount ok">$84</div>
-          </div>
-          <div class="bill-item">
-            <div><div class="bill-name">Internet</div><div class="bill-sub">Due Apr 12</div></div>
-            <div class="bill-amount">$65</div>
-          </div>
-          <div class="bill-item">
-            <div><div class="bill-name">Car Insurance</div><div class="bill-sub">Due Apr 15 · Auto-pay</div></div>
-            <div class="bill-amount ok">$191</div>
-          </div>
-        </div>
-        <div class="add-row">
-          <input class="add-input" placeholder="Bill name…" id="bill-name-in">
-          <input class="add-input" placeholder="$" style="max-width:70px;" id="bill-amt-in">
-          <button class="add-btn" onclick="addBill()">+</button>
-        </div>
-      </div>
-
-      <div id="money-goals" style="display:none">
-        <div class="section-title">Savings Goals</div>
-        <div class="card">
-          <div class="goal-item">
-            <div class="goal-top"><span class="goal-name">Emergency Fund</span><span class="goal-pct">54%</span></div>
-            <div class="goal-bar-track"><div class="goal-bar-fill green" style="width:54%"></div></div>
-            <div class="goal-meta"><span>$2,700 of $5,000</span></div>
-          </div>
-          <div class="goal-item">
-            <div class="goal-top"><span class="goal-name">Trip Fund</span><span class="goal-pct">31%</span></div>
-            <div class="goal-bar-track"><div class="goal-bar-fill" style="width:31%"></div></div>
-            <div class="goal-meta"><span>$620 of $2,000</span></div>
-          </div>
-          <div class="goal-item">
-            <div class="goal-top"><span class="goal-name">Wedding Fund</span><span class="goal-pct">12%</span></div>
-            <div class="goal-bar-track"><div class="goal-bar-fill rose" style="width:12%"></div></div>
-            <div class="goal-meta"><span>$480 of $4,000</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="money-subs" style="display:none">
-        <div class="section-title">Monthly</div>
-        <div class="card">
-          <div class="bill-item">
-            <div><div class="bill-name">Netflix</div><div class="bill-sub">Adam · renews Apr 22</div></div>
-            <div class="bill-amount">$17</div>
-          </div>
-          <div class="bill-item">
-            <div><div class="bill-name">Spotify</div><div class="bill-sub">Brittany · renews Apr 5</div></div>
-            <div class="bill-amount">$11</div>
-          </div>
-          <div class="bill-item">
-            <div><div class="bill-name">Apple iCloud</div><div class="bill-sub">Brittany · renews Apr 14</div></div>
-            <div class="bill-amount">$3</div>
-          </div>
-        </div>
+      <div class="add-row" style="margin-top:8px;">
+        <input class="add-input" id="goal-current-in" placeholder="Saved so far $" type="number" inputmode="decimal">
+        <input class="add-input" id="goal-target-in" placeholder="Target $" type="number" inputmode="decimal">
+        <button class="add-btn" onclick="addGoal()">+</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ══════════ NOTES ══════════ -->
-  <div class="page" id="page-notes">
-    <div class="page-header">
-      <div class="page-title">Notes</div>
-    </div>
-    <div class="content">
-      <div class="tab-row">
-        <button class="tab-pill active" onclick="notesTab('quick',this)">Quick</button>
-        <button class="tab-pill" onclick="notesTab('grocery',this)">Grocery</button>
-        <button class="tab-pill" onclick="notesTab('discuss',this)">To Discuss</button>
-      </div>
-
-      <div id="notes-quick">
-        <div id="notes-list"></div>
-        <button class="add-btn" onclick="addNote()" style="width:100%;margin-top:6px;padding:12px;border-radius:var(--radius-sm);font-size:0.85rem;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0.05em;">+ New Note</button>
-      </div>
-
-      <div id="notes-grocery" style="display:none">
-        <div class="card" id="grocery-list"></div>
-        <div class="add-row" style="margin-top:10px;">
-          <input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')addGrocery()">
-          <button class="add-btn" onclick="addGrocery()">+</button>
-        </div>
-      </div>
-
-      <div id="notes-discuss" style="display:none">
-        <div class="card" id="discuss-list"></div>
-        <div class="add-row" style="margin-top:10px;">
-          <input class="add-input" id="discuss-in" placeholder="Add topic…" onkeydown="if(event.key==='Enter')addDiscuss()">
-          <button class="add-btn" onclick="addDiscuss()">+</button>
-        </div>
-      </div>
+<!-- ACCOUNTS -->
+<div class="page" id="page-accounts">
+  <div class="page-header"><div class="page-title">Accounts</div></div>
+  <div class="content">
+    <p style="font-size:0.71rem;color:var(--text-muted);padding:0 2px 12px;">Reference only — store real passwords in a password manager</p>
+    <div class="card" id="accounts-list"><div class="empty">No accounts added yet</div></div>
+    <div class="add-row" style="flex-wrap:wrap;gap:8px;">
+      <input class="add-input" id="acct-name-in" placeholder="Service…" style="min-width:110px;">
+      <input class="add-input" id="acct-owner-in" placeholder="Owner…" style="max-width:100px;">
+      <input class="add-input" id="acct-renew-in" placeholder="Renewal" style="max-width:82px;">
+      <button class="add-btn" onclick="addAcct()">+</button>
     </div>
   </div>
+</div>
 
-  <!-- ══════════ PLANS ══════════ -->
-  <div class="page" id="page-plans">
-    <div class="page-header">
-      <div class="page-title">Plans</div>
-    </div>
-    <div class="content">
-      <div class="section-title">Upcoming</div>
-      <div class="card" id="plans-list">
-        <div class="event-item">
-          <div class="event-date-block"><div class="event-day">18</div><div class="event-mon">Apr</div></div>
-          <div><div class="event-title">Dinner with family</div><div class="event-desc">Reservation at 7pm</div></div>
-        </div>
-        <div class="event-item">
-          <div class="event-date-block"><div class="event-day">25</div><div class="event-mon">Apr</div></div>
-          <div><div class="event-title">Adam WGU milestone</div><div class="event-desc">Course checkpoint due</div></div>
-        </div>
-        <div class="event-item">
-          <div class="event-date-block"><div class="event-day">12</div><div class="event-mon">May</div></div>
-          <div><div class="event-title">Weekend trip</div><div class="event-desc">Pack by Friday night</div></div>
-        </div>
-      </div>
-
-      <div class="section-title">Add Event</div>
-      <div class="card">
-        <div class="add-row" style="margin:0; flex-wrap:wrap; gap:8px;">
-          <input class="add-input" id="plan-date" placeholder="Date (Apr 18)" style="max-width:120px;">
-          <input class="add-input" id="plan-title" placeholder="What's happening…" style="flex:1;min-width:140px;">
-          <button class="add-btn" onclick="addPlan()" style="flex-shrink:0;">+</button>
-        </div>
-        <input class="add-input" id="plan-note" placeholder="Note (optional)" style="width:100%;margin-top:8px;">
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ HOME ══════════ -->
-  <div class="page" id="page-home">
-    <div class="page-header">
-      <div class="page-title">Home</div>
-    </div>
-    <div class="content">
-      <div class="tab-row">
-        <button class="tab-pill active" onclick="homeTab('chores',this)">Chores</button>
-        <button class="tab-pill" onclick="homeTab('projects',this)">Projects</button>
-      </div>
-
-      <div id="home-chores">
-        <div class="card">
-          <div class="chore-item" onclick="toggleChore(this)">
-            <span class="chore-icon">🧺</span>
-            <span class="chore-text">Laundry</span>
-            <span class="chore-freq">Weekly</span>
-          </div>
-          <div class="chore-item" onclick="toggleChore(this)">
-            <span class="chore-icon">🧹</span>
-            <span class="chore-text">Vacuum</span>
-            <span class="chore-freq">Weekly</span>
-          </div>
-          <div class="chore-item" onclick="toggleChore(this)">
-            <span class="chore-icon">🍽️</span>
-            <span class="chore-text">Dishes</span>
-            <span class="chore-freq">Daily</span>
-          </div>
-          <div class="chore-item" onclick="toggleChore(this)">
-            <span class="chore-icon">🗑️</span>
-            <span class="chore-text">Trash out</span>
-            <span class="chore-freq">Weekly</span>
-          </div>
-          <div class="chore-item" onclick="toggleChore(this)">
-            <span class="chore-icon">🧼</span>
-            <span class="chore-text">Bathrooms</span>
-            <span class="chore-freq">Biweekly</span>
-          </div>
-        </div>
-        <div class="add-row">
-          <input class="add-input" id="chore-in" placeholder="Add chore…" onkeydown="if(event.key==='Enter')addChore()">
-          <button class="add-btn" onclick="addChore()">+</button>
-        </div>
-      </div>
-
-      <div id="home-projects" style="display:none">
-        <div class="card">
-          <div class="task-item">
-            <div class="task-check" onclick="toggleTask(this)"></div>
-            <div class="task-text">Deep clean kitchen cabinets</div>
-          </div>
-          <div class="task-item">
-            <div class="task-check" onclick="toggleTask(this)"></div>
-            <div class="task-text">Fix bathroom caulk</div>
-          </div>
-          <div class="task-item">
-            <div class="task-check" onclick="toggleTask(this)"></div>
-            <div class="task-text">Organize storage closet</div>
-          </div>
-        </div>
-        <div class="add-row">
-          <input class="add-input" id="project-in" placeholder="Add project…" onkeydown="if(event.key==='Enter')addProject()">
-          <button class="add-btn" onclick="addProject()">+</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ GOALS ══════════ -->
-  <div class="page" id="page-goals">
-    <div class="page-header">
-      <div class="page-title">Goals</div>
-    </div>
-    <div class="content">
-      <div class="section-title">Financial</div>
-      <div class="card">
-        <div class="goal-item">
-          <div class="goal-top"><span class="goal-name">Emergency Fund</span><span class="goal-pct">54%</span></div>
-          <div class="goal-bar-track"><div class="goal-bar-fill green" style="width:54%"></div></div>
-          <div class="goal-meta"><span>$2,700 of $5,000</span></div>
-        </div>
-        <div class="goal-item">
-          <div class="goal-top"><span class="goal-name">Wedding Fund</span><span class="goal-pct">12%</span></div>
-          <div class="goal-bar-track"><div class="goal-bar-fill rose" style="width:12%"></div></div>
-          <div class="goal-meta"><span>$480 of $4,000</span></div>
-        </div>
-      </div>
-
-      <div class="section-title">Life</div>
-      <div class="card">
-        <div class="goal-item">
-          <div class="goal-top"><span class="goal-name">Adam — WGU degree</span><span class="goal-pct">On track</span></div>
-          <div class="goal-bar-track"><div class="goal-bar-fill" style="width:22%"></div></div>
-          <div class="goal-meta"><span>Started Jan 2025</span><strong>Target: 2027</strong></div>
-        </div>
-        <div class="goal-item">
-          <div class="goal-top"><span class="goal-name">Financial freedom</span><span class="goal-pct">Active</span></div>
-          <div class="goal-bar-track"><div class="goal-bar-fill green" style="width:18%"></div></div>
-          <div class="goal-meta"><span>TGW + PRISM in build</span></div>
-        </div>
-      </div>
-
-      <div class="section-title">Relationship</div>
-      <div class="card">
-        <div class="goal-item">
-          <div class="goal-top"><span class="goal-name">Date night monthly</span><span class="goal-pct">3 / 12</span></div>
-          <div class="goal-bar-track"><div class="goal-bar-fill rose" style="width:25%"></div></div>
-          <div class="goal-meta"><span>Keep the streak going</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ ACCOUNTS ══════════ -->
-  <div class="page" id="page-accounts">
-    <div class="page-header">
-      <div class="page-title">Accounts</div>
-    </div>
-    <div class="content">
-      <div class="card-label" style="padding:0 2px 6px;">Reference only — store real passwords in a password manager</div>
-      <div class="section-title">Services</div>
-      <div class="card">
-        <div class="acct-item">
-          <div><div class="acct-name">Netflix</div><div class="acct-sub">Adam · adam@email.com</div></div>
-          <span class="acct-renew">Apr 22</span>
-        </div>
-        <div class="acct-item">
-          <div><div class="acct-name">Spotify</div><div class="acct-sub">Brittany · brit@email.com</div></div>
-          <span class="acct-renew">Apr 5</span>
-        </div>
-        <div class="acct-item">
-          <div><div class="acct-name">Apple iCloud</div><div class="acct-sub">Brittany · Apple ID</div></div>
-          <span class="acct-renew">Apr 14</span>
-        </div>
-        <div class="acct-item">
-          <div><div class="acct-name">Internet (Xfinity)</div><div class="acct-sub">Adam · account #</div></div>
-          <span class="acct-renew">Monthly</span>
-        </div>
-      </div>
-
-      <div class="add-row" style="margin-top:4px;">
-        <input class="add-input" id="acct-name-in" placeholder="Service name…">
-        <input class="add-input" id="acct-owner-in" placeholder="Owner…" style="max-width:100px;">
-        <button class="add-btn" onclick="addAcct()">+</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ BOTTOM NAV ══════════ -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="goTo('dash',this)">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home</span>
-    </button>
-    <button class="nav-item" onclick="goTo('tasks',this)">
-      <span class="nav-icon">✓</span>
-      <span class="nav-label">Tasks</span>
-    </button>
-    <button class="nav-item" onclick="goTo('money',this)">
-      <span class="nav-icon">$</span>
-      <span class="nav-label">Money</span>
-    </button>
-    <button class="nav-item" onclick="goTo('notes',this)">
-      <span class="nav-icon">✏️</span>
-      <span class="nav-label">Notes</span>
-    </button>
-    <button class="nav-item" onclick="goTo('plans',this)">
-      <span class="nav-icon">📅</span>
-      <span class="nav-label">Plans</span>
-    </button>
-    <button class="nav-item" onclick="goTo('goals',this)">
-      <span class="nav-icon">◎</span>
-      <span class="nav-label">Goals</span>
-    </button>
-  </nav>
+<!-- BOTTOM NAV — E fix: all 6 tabs have emojis -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-dash" onclick="navTo('dash')">
+    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+  </button>
+  <button class="nav-item" id="nav-tasks" onclick="navTo('tasks')">
+    <span class="nav-icon">✅</span><span class="nav-label">Tasks</span>
+  </button>
+  <button class="nav-item" id="nav-money" onclick="navTo('money')">
+    <span class="nav-icon">💰</span><span class="nav-label">Money</span>
+  </button>
+  <button class="nav-item" id="nav-notes" onclick="navTo('notes')">
+    <span class="nav-icon">📝</span><span class="nav-label">Notes</span>
+  </button>
+  <button class="nav-item" id="nav-plans" onclick="navTo('plans')">
+    <span class="nav-icon">📅</span><span class="nav-label">Plans</span>
+  </button>
+  <button class="nav-item" id="nav-goals" onclick="navTo('goals')">
+    <span class="nav-icon">🎯</span><span class="nav-label">Goals</span>
+  </button>
+</nav>
 
 </div>
 
 <script>
-// ── State ──
 const QUOTES = [
   { q: "A small daily task, if it be really daily, will beat the labours of a spasmodic Hercules.", a: "Anthony Trollope" },
   { q: "We do not remember days, we remember moments.", a: "Cesare Pavese" },
@@ -937,156 +438,279 @@ const QUOTES = [
   { q: "The best time to plant a tree was 20 years ago. The second best time is now.", a: "Chinese Proverb" },
   { q: "Do not wait to strike till the iron is hot, but make it hot by striking.", a: "W.B. Yeats" },
   { q: "Together is a wonderful place to be.", a: "" },
+  { q: "The whole is greater than the sum of its parts.", a: "Aristotle" },
 ];
 
-let tasks = [
-  { text: "Pay rent", owner: "both", done: false },
-  { text: "Schedule dentist appointments", owner: "brit", done: false },
-  { text: "Review internet bill options", owner: "adam", done: false },
-  { text: "Call landlord about AC", owner: "adam", done: false },
-  { text: "Pick up dry cleaning", owner: "brit", done: false },
-];
-
+// C fix: all state starts empty — no placeholder data
+let tasks = [];
 let notes = [];
-let groceryItems = ["Eggs", "Almond milk", "Bread", "Coffee"];
-let discussItems = ["Vacation dates", "Budget review"];
+let groceryItems = [];
+let discussItems = [];
+let bills = [];
+let subs = [];
+let goalsFinancial = [];
+let goalsLife = [];
+let goalsRelationship = [];
+let accounts = [];
 let currentTaskFilter = "all";
+let currentOwner = "adam";
 
-// ── Init ──
 (function init() {
   const now = new Date();
-
-  // Greeting
   const h = now.getHours();
-  const greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-  document.getElementById("dash-timegreeting").textContent = greet;
-
-  // Date
-  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const el = document.getElementById("tasks-date");
-  if (el) el.textContent = dateStr;
-
-  // Quote of day
+  document.getElementById("dash-greeting").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  document.getElementById("tasks-date").textContent = now.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
   const q = QUOTES[now.getDate() % QUOTES.length];
   document.getElementById("dash-quote-text").textContent = `"${q.q}"`;
   document.getElementById("dash-quote-author").textContent = q.a ? `— ${q.a}` : "";
-
+  updateDashStats();
   renderTasks();
+  renderTaskPreview();
   renderNotes();
   renderGrocery();
   renderDiscuss();
-  updateDashStats();
 })();
 
-// ── Navigation ──
-function goTo(id, btn) {
+function navTo(id) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-" + id).classList.add("active");
-  btn.classList.add("active");
+  const b = document.getElementById("nav-" + id);
+  if (b) b.classList.add("active");
   window.scrollTo(0, 0);
 }
 
-// ── Tasks ──
+// B fix: pill-based owner selection, no broken select dropdown
+function setOwner(owner, btn) {
+  currentOwner = owner;
+  document.querySelectorAll(".owner-pill").forEach(p => p.className = "owner-pill");
+  btn.classList.add("sel-" + owner);
+}
+
+// A fix: full row is click target
 function renderTasks() {
   const list = document.getElementById("task-list");
-  const filtered = currentTaskFilter === "all" ? tasks : tasks.filter(t => t.owner === currentTaskFilter);
-  if (!filtered.length) { list.innerHTML = '<div class="empty">No tasks here — add one below</div>'; return; }
-  list.innerHTML = filtered.map((t, i) => {
-    const realIdx = tasks.indexOf(t);
-    const tagClass = t.owner === "adam" ? "tag-adam" : t.owner === "brit" ? "tag-brit" : t.owner === "home" ? "tag-home" : "tag-both";
-    const ownerLabel = t.owner === "adam" ? "Adam" : t.owner === "brit" ? "Brittany" : t.owner === "home" ? "Home" : "Together";
-    return `<div class="task-item">
-      <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTaskIdx(${realIdx})"></div>
-      <div class="task-text ${t.done ? 'done' : ''}">${t.text}</div>
-      <span class="task-tag ${tagClass}">${ownerLabel}</span>
+  const src = currentTaskFilter === "all" ? tasks : tasks.filter(t => t.owner === currentTaskFilter);
+  if (!src.length) { list.innerHTML = '<div class="empty">No tasks here — add one below</div>'; return; }
+  list.innerHTML = src.map(t => {
+    const i = tasks.indexOf(t);
+    const tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
+    const ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
+    return `<div class="task-item" onclick="toggleTask(${i})">
+      <div class="task-check${t.done?" done":""}"></div>
+      <div class="task-text${t.done?" done":""}">${t.text}</div>
+      <span class="task-tag ${tc}">${ol}</span>
     </div>`;
   }).join("");
-  updateDashStats();
+}
+
+function renderTaskPreview() {
+  const el = document.getElementById("dash-task-preview");
+  const open = tasks.filter(t => !t.done).slice(0, 3);
+  if (!open.length) {
+    el.innerHTML = tasks.length ? '<div class="empty">All done! 🎉</div>' : '<div class="empty">Add tasks to see them here</div>';
+    return;
+  }
+  el.innerHTML = open.map(t => {
+    const i = tasks.indexOf(t);
+    const tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
+    const ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
+    return `<div class="task-item" onclick="toggleTask(${i})">
+      <div class="task-check${t.done?" done":""}"></div>
+      <div class="task-text">${t.text}</div>
+      <span class="task-tag ${tc}">${ol}</span>
+    </div>`;
+  }).join("");
 }
 
 function filterTasks(owner, btn) {
   currentTaskFilter = owner;
-  document.querySelectorAll(".tab-pill").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("#task-tabs .tab-pill").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   renderTasks();
 }
 
-function toggleTaskIdx(i) {
+// F fix: toggleTask updates done counter immediately
+function toggleTask(i) {
   tasks[i].done = !tasks[i].done;
   renderTasks();
-}
-
-function toggleTask(el) {
-  el.classList.toggle("done");
-  const text = el.nextElementSibling;
-  if (text) text.classList.toggle("done");
+  renderTaskPreview();
+  updateDashStats();
 }
 
 function addTask() {
   const input = document.getElementById("task-input");
-  const owner = document.getElementById("task-owner").value;
   const text = input.value.trim();
   if (!text) return;
-  tasks.unshift({ text, owner, done: false });
+  tasks.unshift({ text, owner: currentOwner, done: false });
   input.value = "";
   renderTasks();
+  renderTaskPreview();
+  updateDashStats();
 }
 
+// F fix: both open and done update live on every toggle
 function updateDashStats() {
-  const open = tasks.filter(t => !t.done).length;
-  const done = tasks.filter(t => t.done).length;
-  const o = document.getElementById("dash-tasks-open");
-  const d = document.getElementById("dash-tasks-done");
-  if (o) o.textContent = open;
-  if (d) d.textContent = done;
+  document.getElementById("dash-tasks-open").textContent = tasks.filter(t => !t.done).length;
+  document.getElementById("dash-tasks-done").textContent = tasks.filter(t => t.done).length;
 }
 
-// ── Notes ──
+function renderBills() {
+  const list = document.getElementById("bills-list");
+  if (!bills.length) { list.innerHTML = '<div class="empty">No bills yet — add one below</div>'; return; }
+  list.innerHTML = bills.map(b => `
+    <div class="bill-item">
+      <div><div class="bill-name">${b.name}</div><div class="bill-sub">${b.date}</div></div>
+      <div class="bill-amount">$${b.amount}</div>
+    </div>`).join("");
+}
+
+function addBill() {
+  const name = document.getElementById("bill-name-in").value.trim();
+  const amt = document.getElementById("bill-amt-in").value.trim();
+  if (!name) return;
+  const now = new Date();
+  bills.push({ name, amount: parseFloat(amt)||0, date: now.toLocaleDateString("en-US",{month:"short",day:"numeric"}) });
+  document.getElementById("bill-name-in").value = "";
+  document.getElementById("bill-amt-in").value = "";
+  renderBills();
+  updateBillTotal();
+}
+
+function updateBillTotal() {
+  const total = bills.reduce((s,b) => s + parseFloat(b.amount||0), 0);
+  document.getElementById("dash-bills-total").textContent = "$" + total.toFixed(0);
+}
+
+function addSub() {
+  const name = document.getElementById("sub-name-in").value.trim();
+  const owner = document.getElementById("sub-owner-in").value.trim();
+  const amt = document.getElementById("sub-amt-in").value.trim();
+  if (!name) return;
+  subs.push({ name, owner, amount: parseFloat(amt)||0 });
+  document.getElementById("sub-name-in").value = "";
+  document.getElementById("sub-owner-in").value = "";
+  document.getElementById("sub-amt-in").value = "";
+  const list = document.getElementById("subs-list");
+  list.innerHTML = subs.map(s => `
+    <div class="bill-item">
+      <div><div class="bill-name">${s.name}</div><div class="bill-sub">${s.owner}</div></div>
+      <div class="bill-amount">$${s.amount}</div>
+    </div>`).join("");
+}
+
+function moneyTab(tab, btn) {
+  document.querySelectorAll("#page-money .tab-pill").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  ["bills","mgoals","subs"].forEach(t => {
+    document.getElementById("money-"+t).style.display = t===tab ? "block" : "none";
+  });
+  if (tab === "mgoals") renderSavingsGoals();
+}
+
+function renderSavingsGoals() {
+  const list = document.getElementById("savings-list");
+  if (!goalsFinancial.length) { list.innerHTML = '<div class="empty">Add goals in the Goals tab</div>'; return; }
+  list.innerHTML = goalsFinancial.map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    return `<div class="goal-item">
+      <div class="goal-top"><span class="goal-name">${g.name}</span><span class="goal-pct">${pct}%</span></div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
+      <div class="goal-meta"><span>$${g.current.toLocaleString()} of $${g.target.toLocaleString()}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function addGoal() {
+  const name = document.getElementById("goal-name-in").value.trim();
+  const cat = document.getElementById("goal-cat-in").value;
+  const current = parseFloat(document.getElementById("goal-current-in").value)||0;
+  const target = parseFloat(document.getElementById("goal-target-in").value)||0;
+  if (!name) return;
+  const g = { name, current, target };
+  if (cat==="financial") goalsFinancial.push(g);
+  else if (cat==="life") goalsLife.push(g);
+  else goalsRelationship.push(g);
+  document.getElementById("goal-name-in").value = "";
+  document.getElementById("goal-current-in").value = "";
+  document.getElementById("goal-target-in").value = "";
+  renderGoalsAll();
+  renderDashGoals();
+}
+
+function renderGoalsAll() {
+  renderGoalSection("goals-financial", goalsFinancial, "");
+  renderGoalSection("goals-life", goalsLife, "green");
+  renderGoalSection("goals-relationship", goalsRelationship, "rose");
+}
+
+function renderGoalSection(elId, arr, cls) {
+  const el = document.getElementById(elId);
+  if (!arr.length) { el.innerHTML = '<div class="empty">No goals yet</div>'; return; }
+  el.innerHTML = arr.map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    return `<div class="goal-item">
+      <div class="goal-top"><span class="goal-name">${g.name}</span><span class="goal-pct">${pct}%</span></div>
+      <div class="goal-bar-track"><div class="goal-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="goal-meta"><span>$${g.current.toLocaleString()} of $${g.target.toLocaleString()}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderDashGoals() {
+  const el = document.getElementById("dash-goals-preview");
+  const all = [...goalsFinancial, ...goalsLife, ...goalsRelationship].slice(0, 2);
+  if (!all.length) { el.innerHTML = '<div class="empty">Add goals to track progress</div>'; return; }
+  el.innerHTML = all.map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    return `<div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:0.82rem;">${g.name}</span>
+        <span style="font-family:'Cormorant Garamond',serif;color:var(--accent);">${pct}%</span>
+      </div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
 function renderNotes() {
   const list = document.getElementById("notes-list");
-  if (!notes.length) { list.innerHTML = '<div class="empty">Tap + to add a note</div>'; return; }
-  list.innerHTML = notes.map((n, i) => `
+  if (!notes.length) { list.innerHTML = '<div class="empty">Tap below to add a note</div>'; return; }
+  list.innerHTML = notes.map((n,i) => `
     <div class="note-card">
       <textarea placeholder="Write something…" oninput="notes[${i}].text=this.value">${n.text}</textarea>
       <div class="note-footer">
         <span class="note-time">${n.time}</span>
-        <span class="note-del" onclick="deleteNote(${i})">remove</span>
+        <span class="note-del" onclick="notes.splice(${i},1);renderNotes()">remove</span>
       </div>
     </div>`).join("");
 }
 
 function addNote() {
   const now = new Date();
-  const time = now.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  notes.unshift({ text: "", time });
+  const time = now.toLocaleDateString("en-US",{month:"short",day:"numeric"}) + " · " + now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  notes.unshift({ text:"", time });
   renderNotes();
   const ta = document.querySelector(".note-card textarea");
   if (ta) ta.focus();
-}
-
-function deleteNote(i) {
-  notes.splice(i, 1);
-  renderNotes();
 }
 
 function notesTab(tab, btn) {
   document.querySelectorAll("#page-notes .tab-pill").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   ["quick","grocery","discuss"].forEach(t => {
-    document.getElementById("notes-" + t).style.display = t === tab ? "block" : "none";
+    document.getElementById("notes-"+t).style.display = t===tab ? "block" : "none";
   });
 }
 
-// ── Grocery ──
 function renderGrocery() {
   const list = document.getElementById("grocery-list");
   if (!groceryItems.length) { list.innerHTML = '<div class="empty">List is clear</div>'; return; }
-  list.innerHTML = groceryItems.map((item, i) => `
-    <div class="task-item">
-      <div class="task-check" onclick="this.classList.toggle('done');this.nextElementSibling.classList.toggle('done')"></div>
+  list.innerHTML = groceryItems.map((item,i) => `
+    <div class="task-item" onclick="this.querySelector('.task-check').classList.toggle('done');this.querySelector('.task-text').classList.toggle('done')">
+      <div class="task-check"></div>
       <div class="task-text">${item}</div>
-      <span class="note-del" onclick="groceryItems.splice(${i},1);renderGrocery()" style="font-size:0.7rem;color:var(--text-dim);cursor:pointer;padding:2px 6px;">×</span>
+      <span onclick="event.stopPropagation();groceryItems.splice(${i},1);renderGrocery()" style="font-size:1.1rem;color:var(--text-dim);cursor:pointer;padding:4px 8px;pointer-events:auto;">×</span>
     </div>`).join("");
 }
 
@@ -1099,15 +723,14 @@ function addGrocery() {
   renderGrocery();
 }
 
-// ── Discuss ──
 function renderDiscuss() {
   const list = document.getElementById("discuss-list");
   if (!discussItems.length) { list.innerHTML = '<div class="empty">Nothing to discuss yet</div>'; return; }
-  list.innerHTML = discussItems.map((item, i) => `
-    <div class="task-item">
-      <div class="task-check" onclick="this.classList.toggle('done');this.nextElementSibling.classList.toggle('done')"></div>
+  list.innerHTML = discussItems.map((item,i) => `
+    <div class="task-item" onclick="this.querySelector('.task-check').classList.toggle('done');this.querySelector('.task-text').classList.toggle('done')">
+      <div class="task-check"></div>
       <div class="task-text">${item}</div>
-      <span onclick="discussItems.splice(${i},1);renderDiscuss()" style="font-size:0.7rem;color:var(--text-dim);cursor:pointer;padding:2px 6px;">×</span>
+      <span onclick="event.stopPropagation();discussItems.splice(${i},1);renderDiscuss()" style="font-size:1.1rem;color:var(--text-dim);cursor:pointer;padding:4px 8px;pointer-events:auto;">×</span>
     </div>`).join("");
 }
 
@@ -1120,41 +743,17 @@ function addDiscuss() {
   renderDiscuss();
 }
 
-// ── Money tabs ──
-function moneyTab(tab, btn) {
-  document.querySelectorAll("#page-money .tab-pill").forEach(p => p.classList.remove("active"));
-  btn.classList.add("active");
-  ["bills","goals","subs"].forEach(t => {
-    document.getElementById("money-" + t).style.display = t === tab ? "block" : "none";
-  });
-}
-
-function addBill() {
-  const name = document.getElementById("bill-name-in").value.trim();
-  const amt = document.getElementById("bill-amt-in").value.trim();
-  if (!name) return;
-  const card = document.querySelector("#money-bills .card");
-  const div = document.createElement("div");
-  div.className = "bill-item";
-  div.innerHTML = `<div><div class="bill-name">${name}</div><div class="bill-sub">Added today</div></div><div class="bill-amount">$${amt || "—"}</div>`;
-  card.appendChild(div);
-  document.getElementById("bill-name-in").value = "";
-  document.getElementById("bill-amt-in").value = "";
-}
-
-// ── Plans ──
 function addPlan() {
   const date = document.getElementById("plan-date").value.trim();
   const title = document.getElementById("plan-title").value.trim();
   const note = document.getElementById("plan-note").value.trim();
   if (!title) return;
   const list = document.getElementById("plans-list");
+  if (list.querySelector(".empty")) list.innerHTML = "";
   const parts = date.split(" ");
-  const day = parts[1] || "—";
-  const mon = parts[0] || "—";
   const div = document.createElement("div");
   div.className = "event-item";
-  div.innerHTML = `<div class="event-date-block"><div class="event-day">${day}</div><div class="event-mon">${mon}</div></div>
+  div.innerHTML = `<div class="event-date-block"><div class="event-day">${parts[1]||date||"—"}</div><div class="event-mon">${parts[0]||""}</div></div>
     <div><div class="event-title">${title}</div><div class="event-desc">${note}</div></div>`;
   list.appendChild(div);
   document.getElementById("plan-date").value = "";
@@ -1162,29 +761,27 @@ function addPlan() {
   document.getElementById("plan-note").value = "";
 }
 
-// ── Home ──
 function homeTab(tab, btn) {
   document.querySelectorAll("#page-home .tab-pill").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   ["chores","projects"].forEach(t => {
-    document.getElementById("home-" + t).style.display = t === tab ? "block" : "none";
+    document.getElementById("home-"+t).style.display = t===tab ? "block" : "none";
   });
-}
-
-function toggleChore(el) {
-  el.style.opacity = el.style.opacity === "0.4" ? "1" : "0.4";
 }
 
 function addChore() {
   const inp = document.getElementById("chore-in");
+  const freq = document.getElementById("chore-freq").value;
   const v = inp.value.trim();
   if (!v) return;
-  const card = document.querySelector("#home-chores .card");
+  const list = document.getElementById("chores-list");
+  if (list.querySelector(".empty")) list.innerHTML = "";
+  const icons = {Daily:"🍽️",Weekly:"🧹",Biweekly:"🧼",Monthly:"🗑️"};
   const div = document.createElement("div");
   div.className = "chore-item";
-  div.setAttribute("onclick", "toggleChore(this)");
-  div.innerHTML = `<span class="chore-icon">📋</span><span class="chore-text">${v}</span><span class="chore-freq">Added</span>`;
-  card.appendChild(div);
+  div.onclick = function(){ this.style.opacity = this.style.opacity==="0.4" ? "1" : "0.4"; };
+  div.innerHTML = `<span class="chore-icon">${icons[freq]||"📋"}</span><span class="chore-text">${v}</span><span class="chore-freq">${freq}</span>`;
+  list.appendChild(div);
   inp.value = "";
 }
 
@@ -1192,26 +789,31 @@ function addProject() {
   const inp = document.getElementById("project-in");
   const v = inp.value.trim();
   if (!v) return;
-  const card = document.querySelector("#home-projects .card");
+  const list = document.getElementById("projects-list");
+  if (list.querySelector(".empty")) list.innerHTML = "";
   const div = document.createElement("div");
   div.className = "task-item";
-  div.innerHTML = `<div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">${v}</div>`;
-  card.appendChild(div);
+  div.onclick = function(){ const c=this.querySelector('.task-check'); c.classList.toggle('done'); this.querySelector('.task-text').classList.toggle('done'); };
+  div.innerHTML = `<div class="task-check"></div><div class="task-text">${v}</div>`;
+  list.appendChild(div);
   inp.value = "";
 }
 
-// ── Accounts ──
 function addAcct() {
   const name = document.getElementById("acct-name-in").value.trim();
   const owner = document.getElementById("acct-owner-in").value.trim();
+  const renew = document.getElementById("acct-renew-in").value.trim();
   if (!name) return;
-  const card = document.querySelector("#page-accounts .card");
-  const div = document.createElement("div");
-  div.className = "acct-item";
-  div.innerHTML = `<div><div class="acct-name">${name}</div><div class="acct-sub">${owner || "—"}</div></div><span class="acct-renew">—</span>`;
-  card.appendChild(div);
+  accounts.push({ name, owner, renew });
   document.getElementById("acct-name-in").value = "";
   document.getElementById("acct-owner-in").value = "";
+  document.getElementById("acct-renew-in").value = "";
+  const list = document.getElementById("accounts-list");
+  list.innerHTML = accounts.map(a => `
+    <div class="acct-item">
+      <div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.owner}</div></div>
+      <span class="acct-renew">${a.renew||"—"}</span>
+    </div>`).join("");
 }
 </script>
 </body>
