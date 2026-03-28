@@ -174,18 +174,78 @@
 
   .empty { text-align: center; padding: 28px 16px; color: var(--text-dim); font-size: 0.82rem; }
   ::-webkit-scrollbar { width: 0; }
+
+  /* PIN Lock Screen */
+  #lock-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  #lock-screen.unlocked { display: none; }
+  .lock-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; letter-spacing: -0.02em; color: var(--text); }
+  .lock-title em { font-style: italic; color: var(--accent); }
+  .lock-sub { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pin-dots { display: flex; gap: 14px; margin: 8px 0 4px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border-strong); background: transparent; transition: all 0.18s; }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); transform: scale(1.15); }
+  .pin-dot.wrong { background: var(--rose); border-color: var(--rose); animation: pinShake 0.4s ease; }
+  @keyframes pinShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+  .pin-error { font-size: 0.72rem; color: var(--rose); height: 18px; transition: opacity 0.2s; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; }
+  .pin-key { width: 72px; height: 56px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--surface); font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; color: var(--text); cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; backdrop-filter: blur(10px); }
+  .pin-key:active { background: var(--accent-soft); border-color: var(--accent); transform: scale(0.95); }
+  .pin-key.fn { font-size: 0.7rem; font-family: 'DM Sans', sans-serif; color: var(--text-muted); letter-spacing: 0.04em; }
+  .lock-setup { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .lock-setup-label { font-size: 0.78rem; color: var(--text-muted); max-width: 260px; text-align: center; line-height: 1.5; }
 </style>
 </head>
 <body>
 
 <div class="bg-canvas"><div class="bg-mid"></div></div>
-<div id="app">
+
+<!-- PIN LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-title">Our<em>Growth</em></div>
+  <!-- Step 1: User select -->
+  <div id="lock-step-user">
+    <div class="lock-sub">Who's here?</div>
+    <div style="display:flex;gap:12px;margin-top:14px;">
+      <button class="pin-key" style="width:120px;height:52px;font-family:'DM Sans',sans-serif;font-size:0.88rem;" onclick="selectUser('adam')">👤 Adam</button>
+      <button class="pin-key" style="width:120px;height:52px;font-family:'DM Sans',sans-serif;font-size:0.88rem;" onclick="selectUser('brit')">👤 Brittany</button>
+    </div>
+  </div>
+  <!-- Step 2: PIN entry (hidden until user selected) -->
+  <div id="lock-step-pin" style="display:none;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div class="lock-sub" id="lock-label">Enter PIN</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+      <div class="pin-error" id="pin-error">&nbsp;</div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinInput('1')">1</button>
+        <button class="pin-key" onclick="pinInput('2')">2</button>
+        <button class="pin-key" onclick="pinInput('3')">3</button>
+        <button class="pin-key" onclick="pinInput('4')">4</button>
+        <button class="pin-key" onclick="pinInput('5')">5</button>
+        <button class="pin-key" onclick="pinInput('6')">6</button>
+        <button class="pin-key" onclick="pinInput('7')">7</button>
+        <button class="pin-key" onclick="pinInput('8')">8</button>
+        <button class="pin-key" onclick="pinInput('9')">9</button>
+        <button class="pin-key fn" onclick="pinBack()">← Back</button>
+        <button class="pin-key" onclick="pinInput('0')">0</button>
+        <button class="pin-key fn" onclick="pinBackspace()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dash">
   <div class="greeting">
     <div class="greeting-sub" id="dash-greeting">Good morning</div>
-    <div class="greeting-main">Adam <em>&amp;</em><br>Brittany</div>
+    <div class="greeting-main" id="dash-greeting-name">Adam <em>&amp;</em><br>Brittany</div>
   </div>
   <div class="content">
     <div class="dash-quote">
@@ -439,6 +499,158 @@
 </div>
 
 <script>
+// ── PIN Authentication (two-user) ──
+var PIN_KEY_ADAM = 'ourgrowth_pin_adam';
+var PIN_KEY_BRIT = 'ourgrowth_pin_brit';
+var SESSION_KEY = 'ourgrowth_session';
+var pinBuffer = '';
+var pinMode = ''; // 'setup', 'confirm', 'check'
+var pinSetupValue = '';
+var activeUser = ''; // 'adam' or 'brit'
+var activeUserName = ''; // display name
+
+(function initPin() {
+  // Check if already unlocked this session
+  var session = sessionStorage.getItem(SESSION_KEY);
+  if (session) {
+    try {
+      var s = JSON.parse(session);
+      activeUser = s.user;
+      activeUserName = s.name;
+      unlock();
+      return;
+    } catch(e) {}
+  }
+  // Show user selection
+  document.getElementById('lock-step-user').style.display = '';
+  document.getElementById('lock-step-pin').style.display = 'none';
+})();
+
+function selectUser(user) {
+  activeUser = user;
+  activeUserName = user === 'adam' ? 'Adam' : 'Brittany';
+  var pinKey = user === 'adam' ? PIN_KEY_ADAM : PIN_KEY_BRIT;
+  var hasPin = localStorage.getItem(pinKey);
+
+  document.getElementById('lock-step-user').style.display = 'none';
+  document.getElementById('lock-step-pin').style.display = '';
+  pinBuffer = '';
+  updateDots();
+  document.getElementById('pin-error').innerHTML = '&nbsp;';
+
+  if (!hasPin) {
+    pinMode = 'setup';
+    document.getElementById('lock-label').textContent = activeUserName + ' — create your PIN';
+  } else {
+    pinMode = 'check';
+    document.getElementById('lock-label').textContent = 'Hey ' + activeUserName + ' — enter PIN';
+  }
+}
+
+function pinBack() {
+  // Go back to user selection
+  pinBuffer = '';
+  pinSetupValue = '';
+  updateDots();
+  document.getElementById('pin-error').innerHTML = '&nbsp;';
+  document.getElementById('lock-step-user').style.display = '';
+  document.getElementById('lock-step-pin').style.display = 'none';
+}
+
+function pinInput(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updateDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(function() { pinSubmit(); }, 150);
+  }
+}
+
+function pinBackspace() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updateDots();
+  document.getElementById('pin-error').innerHTML = '&nbsp;';
+}
+
+function updateDots() {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('dot-' + i);
+    dot.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+  }
+}
+
+function pinSubmit() {
+  var pinKey = activeUser === 'adam' ? PIN_KEY_ADAM : PIN_KEY_BRIT;
+
+  if (pinMode === 'setup') {
+    pinSetupValue = pinBuffer;
+    pinBuffer = '';
+    updateDots();
+    pinMode = 'confirm';
+    document.getElementById('lock-label').textContent = 'Confirm your PIN, ' + activeUserName;
+    document.getElementById('pin-error').innerHTML = '&nbsp;';
+  } else if (pinMode === 'confirm') {
+    if (pinBuffer === pinSetupValue) {
+      localStorage.setItem(pinKey, hashPin(pinBuffer));
+      unlock();
+    } else {
+      pinWrong('Didn\'t match — try again');
+      pinMode = 'setup';
+      pinSetupValue = '';
+      document.getElementById('lock-label').textContent = activeUserName + ' — create your PIN';
+    }
+  } else {
+    var storedHash = localStorage.getItem(pinKey);
+    if (hashPin(pinBuffer) === storedHash) {
+      unlock();
+    } else {
+      pinWrong('Wrong PIN');
+    }
+  }
+}
+
+function pinWrong(msg) {
+  document.getElementById('pin-error').textContent = msg;
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('dot-' + i).className = 'pin-dot wrong';
+  }
+  pinBuffer = '';
+  setTimeout(function() { updateDots(); }, 500);
+}
+
+function unlock() {
+  document.getElementById('lock-screen').classList.add('unlocked');
+  document.getElementById('app').style.display = '';
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: activeUser, name: activeUserName }));
+  // Personalize greeting
+  updateGreeting();
+}
+
+function updateGreeting() {
+  var h = new Date().getHours();
+  var timeWord = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = timeWord;
+  var nameEl = document.getElementById('dash-greeting-name');
+  if (activeUserName) {
+    nameEl.innerHTML = esc(activeUserName);
+  } else {
+    nameEl.innerHTML = 'Adam <em>&amp;</em><br>Brittany';
+  }
+}
+
+// Simple hash
+function hashPin(pin) {
+  var h = 0;
+  var salt = 'ourgrowth_salt_2026';
+  var s = salt + pin + salt;
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i);
+    h = ((h << 5) - h) + c;
+    h = h & h;
+  }
+  return 'ph_' + Math.abs(h).toString(36);
+}
+
 // ── XSS protection ──
 function esc(str) {
   const d = document.createElement('div');
@@ -505,14 +717,15 @@ let currentOwner = "adam";
 // ── Init ──
 (function init() {
   loadAll();
-  const now = new Date();
-  const h = now.getHours();
-  document.getElementById("dash-greeting").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  var now = new Date();
   document.getElementById("tasks-date").textContent = now.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
-  const q = QUOTES[now.getDate() % QUOTES.length];
+  var q = QUOTES[now.getDate() % QUOTES.length];
   document.getElementById("dash-quote-text").textContent = '"' + q.q + '"';
   document.getElementById("dash-quote-author").textContent = q.a ? "— " + q.a : "";
+  updateGreeting();
   renderAll();
+  // Refresh greeting every 60s so it stays accurate if tab stays open
+  setInterval(updateGreeting, 60000);
 })();
 
 function renderAll() {
