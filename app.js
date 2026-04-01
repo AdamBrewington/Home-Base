@@ -616,7 +616,6 @@ var OG = (function() {
     updateGreeting();renderAll();startSyncLoop();setInterval(updateGreeting,60000);
   }
   initPin();init();
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(e){console.log('SW reg failed:',e);});}
 
   return {
     navTo:navTo,setOwner:setOwner,filterTasks:filterTasks,addTask:addTask,toggleTask:toggleTask,deleteTask:deleteTask,editTask:editTask,saveTaskEdit:saveTaskEdit,toggleTaskNotes:toggleTaskNotes,saveTaskNote:saveTaskNote,renderTasks:renderTasks,

@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=2.4">
 </head>
 <body>
 
@@ -276,6 +276,18 @@
 </nav>
 </div>
 
-<script src="app.js"></script>
+<script>
+// Force kill old service workers that cache stale files
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  });
+  // Re-register fresh after a tick
+  setTimeout(function() {
+    navigator.serviceWorker.register('sw.js?v=2.4');
+  }, 1000);
+}
+</script>
+<script src="app.js?v=2.4"></script>
 </body>
 </html>
