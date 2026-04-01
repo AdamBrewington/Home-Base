@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ourgrowth-v2.2';
+const CACHE_NAME = 'ourgrowth-v2.3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -48,17 +48,14 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  // Cache-first for app shell
+  // Network-first for app shell (HTML, CSS, JS) — always get latest, fall back to cache offline
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request).then(response => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
