@@ -607,7 +607,7 @@ var OG = (function() {
   // ══════════════════════════════════
   // RENDER ALL + INIT
   // ══════════════════════════════════
-  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderDiscuss();renderBills();updateBillTotal();renderSubs();renderGoalsAll();renderDashGoals();renderChores();renderProjects();renderPlans();updateNextEvent();renderDashPaycheck();}
+  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderDiscuss();renderBills();updateBillTotal();renderSubs();renderGoalsAll();renderDashGoals();renderChores();renderProjects();renderPlans();updateNextEvent();renderBudgetTab();renderDashPaycheck();}
 
   function init(){
     loadAll();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ourgrowth-v2.3';
+const CACHE_NAME = 'ourgrowth-v2.4';
 const ASSETS = [
   '/',
   '/index.html',
