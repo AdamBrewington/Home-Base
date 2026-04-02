@@ -126,7 +126,60 @@ var OG = (function() {
   function getCurrentTheme(){return document.documentElement.getAttribute('data-theme')||'warm';}
 
   // ══════════════════════════════════
-  // SETTINGS MODAL
+  // NOTIFICATION PREFERENCES (per user)
+  // ══════════════════════════════════
+  var NOTIF_PREFS_KEY='ourgrowth_notif_prefs';
+  var DEFAULT_PREFS={payday:true,bills:true,events:true,chores:true};
+  function getNotifPrefs(){
+    var key=NOTIF_PREFS_KEY+'_'+(activeUser||'default');
+    try{var raw=localStorage.getItem(key);if(raw)return JSON.parse(raw);}catch(e){}
+    return Object.assign({},DEFAULT_PREFS);
+  }
+  function setNotifPref(type,val){
+    var prefs=getNotifPrefs();prefs[type]=val;
+    var key=NOTIF_PREFS_KEY+'_'+(activeUser||'default');
+    try{localStorage.setItem(key,JSON.stringify(prefs));}catch(e){}
+  }
+
+  // ══════════════════════════════════
+  // PUSH SUBSCRIPTION
+  // ══════════════════════════════════
+  var PUSH_SUB_KEY='ourgrowth_push_sub';
+  function subscribePush(){
+    if(!('serviceWorker' in navigator)||!('PushManager' in window))return Promise.resolve(null);
+    return navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(sub){
+        if(sub)return sub;
+        // VAPID public key — generate yours with: npx web-push generate-vapid-keys
+        // Replace this with your actual public key
+        var vapidPublic='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc';
+        if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;// not configured yet
+        var key=urlBase64ToUint8Array(vapidPublic);
+        return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+      });
+    }).then(function(sub){
+      if(sub){
+        // Store subscription endpoint in KV via worker
+        var url=getSyncUrl();if(!url)return sub;
+        fetch(url.replace('/shared_data','')+'/push-subscribe',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Sync-Token':SYNC_TOKEN},
+          body:JSON.stringify({user:activeUser,subscription:sub.toJSON()})
+        }).catch(function(){});
+      }
+      return sub;
+    }).catch(function(e){console.log('Push sub failed:',e);return null;});
+  }
+  function urlBase64ToUint8Array(base64String){
+    var padding='='.repeat((4-base64String.length%4)%4);
+    var base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+    var rawData=window.atob(base64);var outputArray=new Uint8Array(rawData.length);
+    for(var i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);
+    return outputArray;
+  }
+
+  // ══════════════════════════════════
+  // SETTINGS MODAL (themes + notification prefs)
   // ══════════════════════════════════
   function openSettings(){
     closeModal();
@@ -134,7 +187,28 @@ var OG = (function() {
     var swatches=THEMES.map(function(t){
       return'<div class="theme-swatch'+(t.id===current?' active':'')+'" onclick="OG.setTheme(\''+t.id+'\')" style="background:'+t.bg+';border-color:'+(t.id===current?t.accent:'var(--border)')+';"><div class="theme-swatch-dot" style="background:'+t.accent+';"></div><div class="theme-swatch-name" style="color:'+t.text+';">'+t.name+'</div></div>';
     }).join('');
-    var html='<div class="modal-overlay" onclick="OG.closeModal()"><div class="modal-sheet" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Settings</div><button class="modal-close" onclick="OG.closeModal()">×</button></div><div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Theme for '+esc(activeUserName||'you')+'</div><div class="theme-grid">'+swatches+'</div><div style="font-size:0.67rem;color:var(--text-dim);margin-top:8px;">Each user gets their own theme preference.</div></div></div>';
+
+    var prefs=getNotifPrefs();
+    function tog(type,label){
+      var on=prefs[type];
+      return'<label class="notif-pref-row"><span>'+label+'</span><input type="checkbox" '+(on?'checked':'')+' onchange="OG.setNotifPref(\''+type+'\',this.checked)" style="accent-color:var(--accent);width:18px;height:18px;cursor:pointer;"></label>';
+    }
+    var notifSection=
+      '<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:20px 0 8px;">Notifications for '+esc(activeUserName||'you')+'</div>'+
+      '<div class="card" style="padding:10px 14px;">'+
+        tog('payday','Payday alerts')+
+        tog('bills','Bill reminders')+
+        tog('events','Event reminders')+
+        tog('chores','Chore reminders')+
+      '</div>'+
+      '<div style="font-size:0.67rem;color:var(--text-dim);margin-top:6px;">Push notifications require permission. Tap the 🔔 bell to enable.</div>';
+
+    var html='<div class="modal-overlay" onclick="OG.closeModal()"><div class="modal-sheet" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Settings</div><button class="modal-close" onclick="OG.closeModal()">×</button></div>'+
+      '<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Theme for '+esc(activeUserName||'you')+'</div>'+
+      '<div class="theme-grid">'+swatches+'</div>'+
+      '<div style="font-size:0.67rem;color:var(--text-dim);margin-top:8px;">Each user gets their own theme preference.</div>'+
+      notifSection+
+    '</div></div>';
     document.body.insertAdjacentHTML('beforeend',html);
   }
   function setTheme(id){applyTheme(id);openSettings();}
@@ -493,24 +567,46 @@ var OG = (function() {
   // ══════════════════════════════════
   var notifPermission='default';
   function initNotifications(){if(!('Notification' in window))return;notifPermission=Notification.permission;checkReminders(false);setInterval(function(){checkReminders(false);},60*60*1000);}
-  function onBellClick(){if(!('Notification' in window)){showToast('Not supported','Your browser does not support notifications.','info');return;}if(Notification.permission==='default'){Notification.requestPermission().then(function(p){notifPermission=p;if(p==='granted'){showToast('Reminders on','You\'ll get alerts for bills, chores, and events.','info');checkReminders(true);}});}else checkReminders(true);}
+  function onBellClick(){if(!('Notification' in window)){showToast('Not supported','Your browser does not support notifications.','info');return;}if(Notification.permission==='default'){Notification.requestPermission().then(function(p){notifPermission=p;if(p==='granted'){showToast('Reminders on','You\'ll get alerts for payday, bills, chores, and events.','info');subscribePush();checkReminders(true);}});}else{if(Notification.permission==='granted')subscribePush();checkReminders(true);}}
   function checkReminders(force){var alerts=gatherAlerts();var bell=$('notif-bell');if(bell)bell.classList.toggle('has-alerts',alerts.length>0);if(!force&&!alerts.length)return;if(force&&!alerts.length){showToast('All clear ✓','Nothing urgent right now.','info');return;}if(force){alerts.forEach(function(a){showToast(a.title,a.body,a.type);});}else if(Notification.permission==='granted'){alerts.forEach(function(a){try{new Notification(a.title,{body:a.body});}catch(e){}});}}
   function gatherAlerts(){
-    var alerts=[];
-    bills.forEach(function(b){if(b.paid||!b.dueISO)return;var diff=daysDiff(b.dueISO);
-      if(diff<0)alerts.push({title:'⚠ Bill Overdue',body:b.name+' ($'+Number(b.amount||0).toFixed(0)+')',type:'warning'});
-      else if(diff===0)alerts.push({title:'🔴 Bill Due Today',body:b.name+' · $'+Number(b.amount||0).toFixed(0),type:'warning'});
-      else if(diff===1)alerts.push({title:'🟠 Bill Due Tomorrow',body:b.name+' · $'+Number(b.amount||0).toFixed(0),type:'warning'});
-      else if(diff<=3)alerts.push({title:'🟡 Bill Due Soon',body:b.name+' in '+diff+' days',type:'info'});
-    });
-    chores.forEach(function(c){if(!c.nextDueISO)return;var diff=daysDiff(c.nextDueISO);
-      if(diff<0)alerts.push({title:'🧹 Chore Overdue',body:c.text,type:'warning'});
-      else if(diff===0)alerts.push({title:'🧹 Chore Due Today',body:c.text,type:'info'});
-    });
-    plans.forEach(function(p){if(!p.dateISO)return;var diff=daysDiff(p.dateISO);
-      if(diff===0)alerts.push({title:'📅 Event Today',body:p.title,type:'info'});
-      else if(diff===1)alerts.push({title:'📅 Event Tomorrow',body:p.title,type:'info'});
-    });
+    var alerts=[];var prefs=getNotifPrefs();
+    // Payday
+    if(prefs.payday){
+      ['adam','brit'].forEach(function(p){
+        autoAdvancePaycheck(p);
+        var days=daysUntilPaycheck(p);
+        if(days===0){
+          var billsDue=bills.filter(function(b){return!b.paid&&b.dueISO&&daysDiff(b.dueISO)>=0&&daysDiff(b.dueISO)<=14;});
+          var totalDue=billsDue.reduce(function(t,b){return t+parseFloat(b.amount||0);},0);
+          var name=p==='adam'?'Adam':'Brittany';
+          alerts.push({title:'💸 It\'s Payday!',body:name+'\'s paycheck'+(totalDue>0?' · '+billsDue.length+' bills totalling $'+totalDue.toFixed(0)+' this check':''),type:'info'});
+        }
+      });
+    }
+    // Bills
+    if(prefs.bills){
+      bills.forEach(function(b){if(b.paid||!b.dueISO)return;var diff=daysDiff(b.dueISO);
+        if(diff<0)alerts.push({title:'⚠ Bill Overdue',body:b.name+' ($'+Number(b.amount||0).toFixed(0)+')',type:'warning'});
+        else if(diff===0)alerts.push({title:'🔴 Bill Due Today',body:b.name+' · $'+Number(b.amount||0).toFixed(0),type:'warning'});
+        else if(diff===1)alerts.push({title:'🟠 Bill Due Tomorrow',body:b.name+' · $'+Number(b.amount||0).toFixed(0),type:'warning'});
+        else if(diff<=3)alerts.push({title:'🟡 Bill Due Soon',body:b.name+' in '+diff+' days',type:'info'});
+      });
+    }
+    // Chores
+    if(prefs.chores){
+      chores.forEach(function(c){if(!c.nextDueISO)return;var diff=daysDiff(c.nextDueISO);
+        if(diff<0)alerts.push({title:'🧹 Chore Overdue',body:c.text,type:'warning'});
+        else if(diff===0)alerts.push({title:'🧹 Chore Due Today',body:c.text,type:'info'});
+      });
+    }
+    // Events
+    if(prefs.events){
+      plans.forEach(function(p){if(!p.dateISO)return;var diff=daysDiff(p.dateISO);
+        if(diff===0)alerts.push({title:'📅 Event Today',body:p.title,type:'info'});
+        else if(diff===1)alerts.push({title:'📅 Event Tomorrow',body:p.title,type:'info'});
+      });
+    }
     return alerts;
   }
   function showToast(title,body,type){var stack=$('toast-stack');if(!stack)return;var t=document.createElement('div');t.className='toast '+(type||'info');t.innerHTML='<div class="toast-title">'+esc(title)+'</div><div class="toast-body">'+esc(body)+'</div>';stack.appendChild(t);setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},4500);t.onclick=function(){if(t.parentNode)t.parentNode.removeChild(t);};}
@@ -651,25 +747,29 @@ var OG = (function() {
       billsBeforePay;
   }
   function renderDashPaycheck(){
-    var el=$('dash-paycheck-widget');if(!el)return;
     autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
     var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
     var combined=budgetMonthlyIncome('adam')+budgetMonthlyIncome('brit');
     var committed=totalBillsMonthly()+totalSubsMonthly();
     var surplus=combined-committed;
-    // Budget stat card on dashboard
+    // Budget stat card number
     var budgetEl=$('dash-budget-num');
     if(budgetEl){
       if(combined>0){budgetEl.textContent=(surplus>=0?'+':'-')+' $'+Math.abs(surplus).toFixed(0);budgetEl.className='stat-num '+(surplus>=0?'green':'rose');}
       else{budgetEl.textContent='—';budgetEl.className='stat-num gold';}
     }
-    // Payday widget
-    if(adamDays===null&&britDays===null){el.style.display='none';return;}
-    var days=adamDays!==null?adamDays:britDays;
-    if(adamDays!==null&&britDays!==null)days=Math.min(adamDays,britDays);
-    var budgetStr=combined>0?(surplus>=0?'+$'+Math.abs(surplus).toFixed(0):'-$'+Math.abs(surplus).toFixed(0)):'';
-    el.style.display='';
-    el.innerHTML='💸 '+(days===0?'Payday!':days===1?'Payday tomorrow':days+'d to payday')+(budgetStr?' · Budget: <strong style="color:'+(surplus>=0?'var(--green)':'var(--rose)')+'">'+budgetStr+'</strong>':'');
+    // Budget stat card label — include payday countdown
+    var labelEl=$('dash-budget-label');
+    if(labelEl){
+      var days=null;
+      if(adamDays!==null&&britDays!==null)days=Math.min(adamDays,britDays);
+      else if(adamDays!==null)days=adamDays;
+      else if(britDays!==null)days=britDays;
+      if(days!==null){
+        var payStr=days===0?'Payday!':days===1?'Payday tomorrow':days+'d to payday';
+        labelEl.textContent='Budget · '+payStr;
+      }else{labelEl.textContent='Budget';}
+    }
   }
 
   // ══════════════════════════════════
@@ -701,6 +801,7 @@ var OG = (function() {
     selectUser:selectUser,pinBack:pinBack,pinInput:pinInput,pinBackspace:pinBackspace,
     onBellClick:onBellClick,doUndo:doUndo,undoComplete:undoComplete,
     openSettings:openSettings,closeModal:closeModal,setTheme:setTheme,showDoneToday:showDoneToday,
-    saveBudgetInput:saveBudgetInput,renderBudgetTab:renderBudgetTab,confirmDelete:confirmDelete
+    saveBudgetInput:saveBudgetInput,renderBudgetTab:renderBudgetTab,confirmDelete:confirmDelete,
+    setNotifPref:setNotifPref
   };
 })();
