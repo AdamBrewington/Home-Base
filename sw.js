@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ourgrowth-v3.0';
+const CACHE_NAME = 'ourgrowth-v3.2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -37,7 +37,7 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(response => {
-        if (response.ok && event.request.method === 'GET') {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }

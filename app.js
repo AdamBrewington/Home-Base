@@ -80,10 +80,10 @@ var OG = (function() {
   ];
 
   // ── State ──
-  var tasks=[],notes=[],groceryItems=[],discussItems=[],bills=[],subs=[];
+  var tasks=[],notes=[],groceryItems=[],bills=[],subs=[];
   var changeLog=[];
   var goalsFinancial=[],goalsLife=[],goalsRelationship=[];
-  var chores=[],projects=[],plans=[];
+  var plans=[];
   var budget={adam:{paycheckAmount:0,nextPaycheckISO:''},brit:{paycheckAmount:0,nextPaycheckISO:''}};
   var currentTaskFilter='all',currentOwner='adam';
   var expandedNotes={},expandedGoals={};
@@ -202,7 +202,6 @@ var OG = (function() {
         tog('payday','Payday alerts')+
         tog('bills','Bill reminders')+
         tog('events','Event reminders')+
-        tog('chores','Chore reminders')+
       '</div>'+
       '<div style="font-size:0.67rem;color:var(--text-dim);margin-top:6px;">Push notifications require permission. Tap the 🔔 bell to enable.</div>';
 
@@ -250,17 +249,17 @@ var OG = (function() {
   // ══════════════════════════════════
   function getSyncUrl(){var meta=document.querySelector('meta[name="ourgrowth-sync-url"]');if(meta&&meta.content)return meta.content.trim();return'';}
   function setSyncStatus(msg){var el=$('sync-indicator');if(el)el.textContent=msg;}
-  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,discussItems:discussItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,chores:chores,projects:projects,plans:plans,budget:budget,changeLog:changeLog};}
-  function countState(d){if(!d||typeof d!=='object')return 0;return[d.tasks,d.notes,d.groceryItems,d.discussItems,d.bills,d.subs,d.goalsFinancial,d.goalsLife,d.goalsRelationship,d.chores,d.projects,d.plans].reduce(function(t,a){return t+(Array.isArray(a)?a.length:0);},0);}
+  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,plans:plans,budget:budget,changeLog:changeLog};}
+  function countState(d){if(!d||typeof d!=='object')return 0;return[d.tasks,d.notes,d.groceryItems,d.bills,d.subs,d.goalsFinancial,d.goalsLife,d.goalsRelationship,d.plans].reduce(function(t,a){return t+(Array.isArray(a)?a.length:0);},0);}
   function hasMeaningfulState(d){return countState(d)>0;}
   function applyState(d){
     changeLog=Array.isArray(d.changeLog)?d.changeLog:[];
     tasks=ensureIds(Array.isArray(d.tasks)?d.tasks:[],'task');notes=ensureIds(Array.isArray(d.notes)?d.notes:[],'note');
-    groceryItems=ensureIds(Array.isArray(d.groceryItems)?d.groceryItems:[],'groc');discussItems=ensureIds(Array.isArray(d.discussItems)?d.discussItems:[],'disc');
+    groceryItems=ensureIds(Array.isArray(d.groceryItems)?d.groceryItems:[],'groc');
     bills=ensureIds(Array.isArray(d.bills)?d.bills:[],'bill');subs=ensureIds(Array.isArray(d.subs)?d.subs:[],'sub');
     goalsFinancial=ensureIds(Array.isArray(d.goalsFinancial)?d.goalsFinancial:[],'gfin');goalsLife=ensureIds(Array.isArray(d.goalsLife)?d.goalsLife:[],'glif');
-    goalsRelationship=ensureIds(Array.isArray(d.goalsRelationship)?d.goalsRelationship:[],'grel');chores=ensureIds(Array.isArray(d.chores)?d.chores:[],'chor');
-    projects=ensureIds(Array.isArray(d.projects)?d.projects:[],'proj');plans=ensureIds(Array.isArray(d.plans)?d.plans:[],'plan');
+    goalsRelationship=ensureIds(Array.isArray(d.goalsRelationship)?d.goalsRelationship:[],'grel');
+    plans=ensureIds(Array.isArray(d.plans)?d.plans:[],'plan');
     if(d.budget&&typeof d.budget==='object'){budget=d.budget;if(!budget.adam)budget.adam={paycheckAmount:0,nextPaycheckISO:''};if(!budget.brit)budget.brit={paycheckAmount:0,nextPaycheckISO:''};}
   }
   function persistPayload(payload){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(payload));}catch(e){}}
@@ -356,8 +355,8 @@ var OG = (function() {
   function doUndo(){
     if(!undoItem)return;var col=undoItem.collection,item=undoItem.item;
     if(col==='tasks')tasks.unshift(item);else if(col==='bills')bills.push(item);else if(col==='subs')subs.push(item);
-    else if(col==='chores')chores.push(item);else if(col==='projects')projects.push(item);else if(col==='plans')plans.push(item);
-    else if(col==='notes')notes.unshift(item);else if(col==='groceryItems')groceryItems.push(item);else if(col==='discussItems')discussItems.push(item);
+    else if(col==='plans')plans.push(item);
+    else if(col==='notes')notes.unshift(item);else if(col==='groceryItems')groceryItems.push(item);
     else if(col==='goalsFinancial')goalsFinancial.push(item);else if(col==='goalsLife')goalsLife.push(item);else if(col==='goalsRelationship')goalsRelationship.push(item);
     undoItem=null;clearTimeout(undoTimer);var toast=document.querySelector('.undo-toast');if(toast)toast.remove();
     renderAll();saveAll();
@@ -449,13 +448,6 @@ var OG = (function() {
       else if(diff===0)items.push({dot:'red',label:esc(t.text),cat:'Task due today'});
       else if(diff===1)items.push({dot:'amber',label:esc(t.text),cat:'Task due tomorrow'});
     });
-    // Chores
-    chores.forEach(function(ch){
-      if(!ch.nextDueISO)return;var diff=daysDiff(ch.nextDueISO);
-      if(diff<0)items.push({dot:'red',label:esc(ch.text),cat:'Chore overdue'});
-      else if(diff===0)items.push({dot:'red',label:esc(ch.text),cat:'Chore due today'});
-      else if(diff===1)items.push({dot:'amber',label:esc(ch.text),cat:'Chore due tomorrow'});
-    });
     // Bills
     bills.filter(function(b){return!b.paid&&b.dueISO;}).forEach(function(b){
       var diff=daysDiff(b.dueISO);var lbl=esc(b.name)+' · $'+Number(b.amount||0).toFixed(0);
@@ -477,10 +469,9 @@ var OG = (function() {
     var now=new Date(),todayS=now.toDateString();var weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());weekStart.setHours(0,0,0,0);
     var doneToday=tasks.filter(function(t){return t.done&&t.doneAt&&new Date(t.doneAt).toDateString()===todayS;}).length;
     var doneWeek=tasks.filter(function(t){return t.done&&t.doneAt&&new Date(t.doneAt)>=weekStart;}).length;
-    var choresToday=chores.filter(function(ch){return ch.lastDoneISO&&new Date(ch.lastDoneISO).toDateString()===todayS;}).length;
     var billsPaid=bills.filter(function(b){return b.paid;}).length;
     var r=function(id,v){var el=$(id);if(el)el.textContent=v;};
-    r('recap-done-today',doneToday);r('recap-chores-today',choresToday);r('recap-done-week',doneWeek);r('recap-bills-paid',billsPaid);
+    r('recap-done-today',doneToday);r('recap-done-week',doneWeek);r('recap-bills-paid',billsPaid);
   }
 
   // ══════════════════════════════════
@@ -554,7 +545,7 @@ var OG = (function() {
   // ══════════════════════════════════
   // NOTES / GROCERY / DISCUSS
   // ══════════════════════════════════
-  function notesTab(tab,btn){document.querySelectorAll('#page-notes .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['quick','grocery','discuss'].forEach(function(t){$('notes-'+t).style.display=t===tab?'block':'none';});}
+  function notesTab(tab,btn){document.querySelectorAll('#page-notes .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['quick','grocery'].forEach(function(t){$('notes-'+t).style.display=t===tab?'block':'none';});}
   function renderNotes(){var list=$('notes-list');if(!notes.length){list.innerHTML='<div class="empty">Tap below to add a note</div>';return;}list.innerHTML=notes.map(function(n){var id=n.id;return'<div class="note-card"><textarea placeholder="Write something…" oninput="OG.saveNoteText(\''+id+'\',this.value)">'+esc(n.text)+'</textarea><div class="note-footer"><span class="note-time">'+esc(n.time)+'</span><span class="note-del" onclick="OG.deleteNote(\''+id+'\')">remove</span></div></div>';}).join('');}
   function saveNoteText(id,val){var i=findById(notes,id);if(i>=0){notes[i].text=val;clearTimeout(noteSaveTimer);noteSaveTimer=setTimeout(function(){saveAll();},800);}}
   function deleteNote(id){var removed=removeById(notes,id);if(removed)showUndo('Note','notes',removed);renderNotes();saveAll();}
@@ -566,10 +557,6 @@ var OG = (function() {
   function toggleGroceryLock(id){var i=findById(groceryItems,id);if(i<0)return;groceryItems[i].locked=!groceryItems[i].locked;renderGrocery();saveAll();}
   function clearGrocery(){var kept=groceryItems.filter(function(g){return g.locked;});if(kept.length===groceryItems.length)return;groceryItems=kept;renderGrocery();saveAll();}
   function checkGroceryReset(){var now=Date.now();var changed=false;groceryItems.forEach(function(g){if(g.locked&&g.checked&&g.checkedAt&&(now-g.checkedAt)>=172800000){g.checked=false;g.checkedAt=null;changed=true;}});if(changed)saveAll();}
-  function renderDiscuss(){var list=$('discuss-list');if(!discussItems.length){list.innerHTML='<div class="empty">Nothing to discuss yet</div>';return;}list.innerHTML=discussItems.map(function(item){var id=item.id;return'<div class="task-item" onclick="OG.toggleDiscuss(\''+id+'\')"><div class="task-check'+(item.checked?' done':'')+'"></div><div class="task-text'+(item.checked?' done':'')+'">'+esc(item.text)+'</div><button class="del-btn" onclick="event.stopPropagation();OG.deleteDiscuss(\''+id+'\')">×</button></div>';}).join('');}
-  function toggleDiscuss(id){var i=findById(discussItems,id);if(i>=0){discussItems[i].checked=!discussItems[i].checked;renderDiscuss();saveAll();}}
-  function deleteDiscuss(id){var removed=removeById(discussItems,id);if(removed)showUndo(removed.text,'discussItems',removed);renderDiscuss();saveAll();}
-  function addDiscuss(){var inp=$('discuss-in'),v=inp.value.trim();if(!v)return;discussItems.push({id:uid('disc'),text:v,checked:false});inp.value='';renderDiscuss();saveAll();}
 
   // ══════════════════════════════════
   // NOTIFICATIONS
@@ -603,12 +590,6 @@ var OG = (function() {
       });
     }
     // Chores
-    if(prefs.chores){
-      chores.forEach(function(c){if(!c.nextDueISO)return;var diff=daysDiff(c.nextDueISO);
-        if(diff<0)alerts.push({title:'🧹 Chore Overdue',body:c.text,type:'warning'});
-        else if(diff===0)alerts.push({title:'🧹 Chore Due Today',body:c.text,type:'info'});
-      });
-    }
     // Events
     if(prefs.events){
       plans.forEach(function(p){if(!p.dateISO)return;var diff=daysDiff(p.dateISO);
@@ -637,51 +618,6 @@ var OG = (function() {
   // ══════════════════════════════════
   // CHORES / PROJECTS (with EoD, streak clear, freq display, confirm delete)
   // ══════════════════════════════════
-  function homeTab(tab,btn){document.querySelectorAll('#page-home .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['chores','projects'].forEach(function(t){$('home-'+t).style.display=t===tab?'block':'none';});}
-  function advanceChoreDate(ch){
-    var base=ch.nextDueISO?new Date(ch.nextDueISO):new Date();base.setHours(12,0,0,0);
-    if(ch.freq==='Daily')base.setDate(base.getDate()+1);
-    else if(ch.freq==='Every Other Day')base.setDate(base.getDate()+2);
-    else if(ch.freq==='Weekly')base.setDate(base.getDate()+7);
-    else if(ch.freq==='Biweekly')base.setDate(base.getDate()+14);
-    else if(ch.freq==='Monthly')base.setMonth(base.getMonth()+1);
-    return base.toISOString();
-  }
-  function choreDueLabel(ch){
-    if(!ch.nextDueISO)return ch.freq;
-    var diff=daysDiff(ch.nextDueISO);var fmt=new Date(ch.nextDueISO).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    if(diff<0)return{label:'⚠ Overdue · '+fmt,cls:'urgent'};
-    if(diff===0)return{label:'Due today',cls:'urgent'};
-    if(diff===1)return{label:'Due tomorrow',cls:'soon'};
-    if(diff<=3)return{label:fmt,cls:'soon'};
-    return{label:fmt,cls:''};
-  }
-  function streakValid(ch){if(!ch.lastDoneISO||!ch.streak)return false;var last=new Date(ch.lastDoneISO);last.setHours(0,0,0,0);var now=new Date();now.setHours(0,0,0,0);var win={Daily:2,'Every Other Day':3,Weekly:9,Biweekly:16,Monthly:35}[ch.freq]||9;return Math.ceil((now-last)/86400000)<=win;}
-  function clearStreak(id,event){
-    event.stopPropagation();
-    var i=findById(chores,id);if(i<0)return;
-    chores[i].streak=0;chores[i].lastDoneISO='';
-    renderChores();saveAll();
-  }
-  function renderChores(){
-    var list=$('chores-list');if(!chores.length){list.innerHTML='<div class="empty">No chores yet</div>';return;}
-    var ownerCls={adam:'own-adam',brit:'own-brit',both:'own-both'};var ownerLbl={adam:'Adam',brit:'Brittany',both:'Both'};
-    list.innerHTML=chores.map(function(ch){
-      var id=ch.id;var dl=choreDueLabel(ch),label=typeof dl==='string'?dl:dl.label,dueCls=typeof dl==='object'?dl.cls:'';
-      var owner=ch.owner||'both';
-      var hasStreak=ch.streak&&streakValid(ch)&&ch.streak>=2;
-      var streakHtml=hasStreak?'<span class="chore-streak" style="display:inline-flex;align-items:center;gap:2px;">🔥 '+ch.streak+'<button class="del-btn" onclick="OG.clearStreak(\''+id+'\',event)" style="font-size:0.65rem;padding:1px 4px;opacity:0.5;" title="Clear streak">×</button></span>':'';
-      var freqTag='<span class="chore-freq-tag">'+esc(ch.freq)+'</span>';
-      return'<div class="chore-item" id="cr-'+id+'" onclick="OG.completeChore(\''+id+'\')"><div style="flex:1;min-width:0;"><div class="chore-text">'+esc(ch.text)+'</div><span class="chore-due '+dueCls+'">'+label+'</span> '+freqTag+'</div><span class="chore-owner '+ownerCls[owner]+'">'+ownerLbl[owner]+'</span>'+streakHtml+'<button class="del-btn" onclick="event.stopPropagation();OG.deleteChore(\''+id+'\')">×</button></div>';
-    }).join('');
-  }
-  function completeChore(id){var row=$('cr-'+id);if(row){row.style.transition='opacity 0.3s, transform 0.3s';row.style.opacity='0';row.style.transform='translateX(20px)';}setTimeout(function(){var i=findById(chores,id);if(i<0)return;var ch=chores[i];var prev=(ch.streak&&streakValid(ch))?ch.streak:0;ch.streak=prev+1;ch.lastDoneISO=new Date().toISOString();ch.nextDueISO=advanceChoreDate(ch);logChange('chores','done',ch.text);renderChores();renderDashToday();renderDashRecap();saveAll();},320);}
-  function deleteChore(id){var i=findById(chores,id);if(i<0)return;var ch=chores[i];confirmDelete(ch.text,function(){removeById(chores,id);renderChores();saveAll();});}
-  function addChore(){var inp=$('chore-in'),freq=$('chore-freq').value,dateIn=$('chore-date-in').value;var ownerEl=$('chore-owner-in'),owner=ownerEl?ownerEl.value:'both';var v=inp.value.trim();if(!v)return;var nextDueISO=dateIn?new Date(dateIn+'T12:00:00').toISOString():'';chores.push({id:uid('chor'),text:v,freq:freq,owner:owner,nextDueISO:nextDueISO,streak:0,lastDoneISO:''});logChange('chores','added',v);inp.value='';$('chore-date-in').value='';renderChores();saveAll();}
-  function renderProjects(){var list=$('projects-list');if(!projects.length){list.innerHTML='<div class="empty">No projects yet</div>';return;}list.innerHTML=projects.map(function(p){var id=p.id;return'<div class="task-item" onclick="OG.toggleProject(\''+id+'\')"><div class="task-check'+(p.done?' done':'')+'"></div><div class="task-text'+(p.done?' done':'')+'">'+esc(p.text)+'</div><button class="del-btn" onclick="event.stopPropagation();OG.deleteProject(\''+id+'\')">×</button></div>';}).join('');}
-  function toggleProject(id){var i=findById(projects,id);if(i>=0){projects[i].done=!projects[i].done;renderProjects();saveAll();}}
-  function deleteProject(id){var removed=removeById(projects,id);if(removed)showUndo(removed.text,'projects',removed);renderProjects();saveAll();}
-  function addProject(){var inp=$('project-in'),v=inp.value.trim();if(!v)return;projects.push({id:uid('proj'),text:v,done:false});inp.value='';renderProjects();saveAll();}
 
   // ══════════════════════════════════
   // BUDGET ENGINE
@@ -784,7 +720,7 @@ var OG = (function() {
   // ══════════════════════════════════
   // RENDER ALL + INIT
   // ══════════════════════════════════
-  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderDiscuss();renderBills();renderSubs();renderGoalsAll();renderDashGoals();renderChores();renderProjects();renderPlans();updateNextEvent();renderBudgetTab();renderDashPaycheck();}
+  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderBills();renderSubs();renderGoalsAll();renderDashGoals();renderPlans();updateNextEvent();renderBudgetTab();renderDashPaycheck();}
 
   // Keep renderSubs for data compat — just no UI tab
   function renderSubs(){}
@@ -803,10 +739,7 @@ var OG = (function() {
     addGoal:addGoal,updateGoalLabels:updateGoalLabels,toggleGoalEdit:toggleGoalEdit,saveGoalEdit:saveGoalEdit,cancelGoalEdit:cancelGoalEdit,deleteGoal:deleteGoal,
     notesTab:notesTab,addNote:addNote,saveNoteText:saveNoteText,deleteNote:deleteNote,
     addGrocery:addGrocery,toggleGrocery:toggleGrocery,deleteGrocery:deleteGrocery,toggleGroceryLock:toggleGroceryLock,clearGrocery:clearGrocery,
-    addDiscuss:addDiscuss,toggleDiscuss:toggleDiscuss,deleteDiscuss:deleteDiscuss,
     addPlan:addPlan,deletePlan:deletePlan,
-    homeTab:homeTab,addChore:addChore,completeChore:completeChore,deleteChore:deleteChore,clearStreak:clearStreak,
-    addProject:addProject,toggleProject:toggleProject,deleteProject:deleteProject,
     selectUser:selectUser,pinBack:pinBack,pinInput:pinInput,pinBackspace:pinBackspace,
     onBellClick:onBellClick,doUndo:doUndo,undoComplete:undoComplete,
     openSettings:openSettings,closeModal:closeModal,setTheme:setTheme,showDoneToday:showDoneToday,

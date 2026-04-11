@@ -165,14 +165,12 @@
     <div class="tab-row">
       <button class="tab-pill active" onclick="OG.notesTab('quick',this)">Quick</button>
       <button class="tab-pill" onclick="OG.notesTab('grocery',this)">Grocery</button>
-      <button class="tab-pill" onclick="OG.notesTab('discuss',this)">To Discuss</button>
     </div>
     <div id="notes-quick">
       <div id="notes-list"><div class="empty">Tap below to add a note</div></div>
       <button class="add-btn" onclick="OG.addNote()" style="width:100%;margin-top:8px;padding:13px;border-radius:var(--radius-sm);font-size:0.85rem;font-family:'DM Sans',sans-serif;font-weight:400;">+ New Note</button>
     </div>
-    <div id="notes-grocery" style="display:none"><div class="card" id="grocery-list"><div class="empty">List is clear</div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')OG.addGrocery()"><button class="add-btn" onclick="OG.addGrocery()">+</button></div></div>
-    <div id="notes-discuss" style="display:none"><div class="card" id="discuss-list"><div class="empty">Nothing to discuss yet</div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="discuss-in" placeholder="Add topic…" onkeydown="if(event.key==='Enter')OG.addDiscuss()"><button class="add-btn" onclick="OG.addDiscuss()">+</button></div></div>
+    <div id="notes-grocery" style="display:none"><div style="text-align:right;margin-bottom:6px;"><button class="mini-btn" onclick="OG.clearGrocery()">Clear unlocked</button></div><div class="card" id="grocery-list"><div class="empty">List is clear</div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')OG.addGrocery()"><button class="add-btn" onclick="OG.addGrocery()">+</button></div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="discuss-in" placeholder="Add topic…" onkeydown="if(event.key==='Enter')OG.addDiscuss()"><button class="add-btn" onclick="OG.addDiscuss()">+</button></div></div>
   </div>
 </div>
 
@@ -194,31 +192,6 @@
         <input type="checkbox" id="plan-recurring" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
         Repeat yearly
       </label>
-    </div>
-  </div>
-</div>
-
-<!-- HOME -->
-<div class="page" id="page-home">
-  <div class="page-header"><div class="page-title">Home</div></div>
-  <div class="content">
-    <div class="tab-row">
-      <button class="tab-pill active" onclick="OG.homeTab('chores',this)">Chores</button>
-      <button class="tab-pill" onclick="OG.homeTab('projects',this)">Projects</button>
-    </div>
-    <div id="home-chores">
-      <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
-      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
-        <input class="add-input" id="chore-in" placeholder="Add chore…" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')OG.addChore()">
-        <select class="add-input" id="chore-freq" style="max-width:105px;flex-shrink:0;"><option>Daily</option><option>Every Other Day</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option></select>
-        <select class="add-input" id="chore-owner-in" style="max-width:105px;flex-shrink:0;"><option value="both">Both</option><option value="adam">Adam</option><option value="brit">Brittany</option></select>
-        <input class="add-input" type="date" id="chore-date-in" style="max-width:148px;" title="Next due date">
-        <button class="add-btn" onclick="OG.addChore()">+</button>
-      </div>
-    </div>
-    <div id="home-projects" style="display:none">
-      <div class="card" id="projects-list"><div class="empty">No projects yet</div></div>
-      <div class="add-row"><input class="add-input" id="project-in" placeholder="Add project…" onkeydown="if(event.key==='Enter')OG.addProject()"><button class="add-btn" onclick="OG.addProject()">+</button></div>
     </div>
   </div>
 </div>
@@ -258,7 +231,6 @@
   <button class="nav-item" id="nav-money" onclick="OG.navTo('money')"><span class="nav-icon">💰</span><span class="nav-label">Money</span></button>
   <button class="nav-item" id="nav-notes" onclick="OG.navTo('notes')"><span class="nav-icon">📝</span><span class="nav-label">Notes</span></button>
   <button class="nav-item" id="nav-plans" onclick="OG.navTo('plans')"><span class="nav-icon">📅</span><span class="nav-label">Plans</span></button>
-  <button class="nav-item" id="nav-home" onclick="OG.navTo('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
   <button class="nav-item" id="nav-goals" onclick="OG.navTo('goals')"><span class="nav-icon">🎯</span><span class="nav-label">Goals</span></button>
 </nav>
 </div>
