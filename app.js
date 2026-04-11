@@ -80,6 +80,7 @@ var OG = (function() {
 
   // ── State ──
   var tasks=[],notes=[],groceryItems=[],discussItems=[],bills=[],subs=[];
+  var changeLog=[];
   var goalsFinancial=[],goalsLife=[],goalsRelationship=[];
   var chores=[],projects=[],plans=[];
   var budget={adam:{paycheckAmount:0,nextPaycheckISO:''},brit:{paycheckAmount:0,nextPaycheckISO:''}};
@@ -248,10 +249,11 @@ var OG = (function() {
   // ══════════════════════════════════
   function getSyncUrl(){var meta=document.querySelector('meta[name="ourgrowth-sync-url"]');if(meta&&meta.content)return meta.content.trim();return'';}
   function setSyncStatus(msg){var el=$('sync-indicator');if(el)el.textContent=msg;}
-  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,discussItems:discussItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,chores:chores,projects:projects,plans:plans,budget:budget};}
+  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,discussItems:discussItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,chores:chores,projects:projects,plans:plans,budget:budget,changeLog:changeLog};}
   function countState(d){if(!d||typeof d!=='object')return 0;return[d.tasks,d.notes,d.groceryItems,d.discussItems,d.bills,d.subs,d.goalsFinancial,d.goalsLife,d.goalsRelationship,d.chores,d.projects,d.plans].reduce(function(t,a){return t+(Array.isArray(a)?a.length:0);},0);}
   function hasMeaningfulState(d){return countState(d)>0;}
   function applyState(d){
+    changeLog=Array.isArray(d.changeLog)?d.changeLog:[];
     tasks=ensureIds(Array.isArray(d.tasks)?d.tasks:[],'task');notes=ensureIds(Array.isArray(d.notes)?d.notes:[],'note');
     groceryItems=ensureIds(Array.isArray(d.groceryItems)?d.groceryItems:[],'groc');discussItems=ensureIds(Array.isArray(d.discussItems)?d.discussItems:[],'disc');
     bills=ensureIds(Array.isArray(d.bills)?d.bills:[],'bill');subs=ensureIds(Array.isArray(d.subs)?d.subs:[],'sub');
@@ -415,7 +417,7 @@ var OG = (function() {
     if(!wasDone){var row=$('tr-'+id);if(row){row.style.transition='opacity 0.35s, transform 0.35s';var chk=row.querySelector('.task-check');if(chk)chk.classList.add('done');row.style.opacity='0';row.style.transform='translateX(24px)';setTimeout(function(){renderTasks();renderTaskPreview();updateDashStats();},380);saveAll();return;}}
     renderTasks();renderTaskPreview();updateDashStats();saveAll();
   }
-  function deleteTask(id){var removed=removeById(tasks,id);if(removed)showUndo(removed.text,'tasks',removed);renderTasks();renderTaskPreview();updateDashStats();saveAll();}
+  function deleteTask(id){var removed=removeById(tasks,id);if(removed)logChange('tasks','deleted',removed.text);if(removed)showUndo(removed.text,'tasks',removed);renderTasks();renderTaskPreview();updateDashStats();saveAll();}
   function editTask(id){
     var i=findById(tasks,id);if(i<0)return;var t=tasks[i];var row=$('tr-'+id);if(!row||row.querySelector('.edit-inline'))return;
     var dueVal=t.dueISO?new Date(t.dueISO).toISOString().split('T')[0]:'';
@@ -424,7 +426,7 @@ var OG = (function() {
     row.appendChild(form);$('edit-task-text-'+id).focus();
   }
   function saveTaskEdit(id){var i=findById(tasks,id);if(i<0)return;var textEl=$('edit-task-text-'+id),dueEl=$('edit-task-due-'+id);if(textEl&&textEl.value.trim())tasks[i].text=textEl.value.trim();if(dueEl)tasks[i].dueISO=dueEl.value?new Date(dueEl.value+'T12:00:00').toISOString():'';renderTasks();renderTaskPreview();saveAll();}
-  function addTask(){var input=$('task-input'),text=input.value.trim(),dueIn=$('task-due-in')?$('task-due-in').value:'';if(!text)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';tasks.unshift({id:uid('task'),text:text,owner:currentOwner,done:false,doneAt:null,createdAt:new Date().toISOString(),dueISO:dueISO,notes:''});input.value='';if($('task-due-in'))$('task-due-in').value='';renderTasks();renderTaskPreview();updateDashStats();saveAll();}
+  function addTask(){var input=$('task-input'),text=input.value.trim(),dueIn=$('task-due-in')?$('task-due-in').value:'';if(!text)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';tasks.unshift({id:uid('task'),text:text,owner:currentOwner,done:false,doneAt:null,createdAt:new Date().toISOString(),dueISO:dueISO,notes:''});logChange('tasks','added',text);input.value='';if($('task-due-in'))$('task-due-in').value='';renderTasks();renderTaskPreview();updateDashStats();saveAll();}
 
   // ══════════════════════════════════
   // DASHBOARD STATS
@@ -490,16 +492,16 @@ var OG = (function() {
     var d=billDaysUntil(b);var fmt=b.dueISO?new Date(b.dueISO).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     if(d<0)return'⚠ Overdue '+Math.abs(d)+'d';if(d===0)return'Due Today';if(d===1)return'Due Tomorrow';if(d<=7)return'Approaching · '+fmt;return'Good · '+fmt;
   }
-  function checkBillAutoReset(){var changed=false;bills.forEach(function(b){if(b.paid&&b.recurring&&b.dueISO){var diff=daysDiff(b.dueISO);if(diff<=0){b.paid=false;changed=true;}}});if(changed)saveAll();}
+  function checkBillAutoReset(){var changed=false;bills.forEach(function(b){if(b.paid&&b.recurring&&b.dueISO){var diff=daysDiff(b.dueISO);if(diff<0){var next=new Date(b.dueISO);next.setMonth(next.getMonth()+1);b.dueISO=next.toISOString();b.paid=false;b.paidAt=null;changed=true;}}});if(changed)saveAll();}
   function renderBills(){
     checkBillAutoReset();var list=$('bills-list');if(!bills.length){list.innerHTML='<div class="empty">No bills yet — add one below</div>';return;}
     var sorted=bills.slice().sort(function(a,b){if(a.paid&&!b.paid)return 1;if(!a.paid&&b.paid)return-1;return billDaysUntil(a)-billDaysUntil(b);});
     list.innerHTML=sorted.map(function(b){var id=b.id,urg=billUrgencyClass(b);return'<div class="bill-item '+urg+'"><div style="flex:1;min-width:0;"><div class="bill-name">'+esc(b.name)+(b.recurring?'<span class="bill-recurring-tag">recurring</span>':'')+'</div><div class="bill-sub">'+billStatusLabel(b)+'</div></div><div class="bill-amount">$'+Number(b.amount||0).toFixed(0)+'</div><button class="bill-status-btn" onclick="OG.toggleBillPaid(\''+id+'\')">'+(b.paid?'Paid':'Mark Paid')+'</button><button class="edit-btn" onclick="OG.editBill(\''+id+'\')" title="Edit">✏️</button><button class="del-btn" onclick="OG.deleteBill(\''+id+'\')">×</button></div>';}).join('');
   }
-  function toggleBillPaid(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];b.paid=!b.paid;if(b.paid&&b.recurring&&b.dueISO){var next=new Date(b.dueISO);next.setMonth(next.getMonth()+1);b.dueISO=next.toISOString();}renderBills();saveAll();}
-  function deleteBill(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];confirmDelete(b.name,function(){removeById(bills,id);renderBills();saveAll();});}
+  function toggleBillPaid(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];b.paid=!b.paid;if(b.paid){b.paidAt=Date.now();logChange("bills","paid",b.name);}renderBills();saveAll();}
+  function deleteBill(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];logChange('bills','deleted',b.name);confirmDelete(b.name,function(){removeById(bills,id);renderBills();saveAll();});}
   function editBill(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];var text=prompt('Bill name:',b.name);if(text===null)return;if(text.trim())b.name=text.trim();var amt=prompt('Amount:',b.amount);if(amt!==null)b.amount=parseFloat(amt)||0;renderBills();saveAll();}
-  function addBill(){var name=$('bill-name-in').value.trim(),amt=$('bill-amt-in').value.trim(),dueIn=$('bill-due-in').value;var recurEl=$('bill-recurring-in'),recurring=recurEl?recurEl.checked:false;if(!name)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';bills.push({id:uid('bill'),name:name,amount:parseFloat(amt)||0,dueISO:dueISO,paid:false,recurring:recurring});$('bill-name-in').value='';$('bill-amt-in').value='';$('bill-due-in').value='';if(recurEl)recurEl.checked=false;renderBills();saveAll();}
+  function addBill(){var name=$('bill-name-in').value.trim(),amt=$('bill-amt-in').value.trim(),dueIn=$('bill-due-in').value;var recurEl=$('bill-recurring-in'),recurring=recurEl?recurEl.checked:false;if(!name)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';bills.push({id:uid('bill'),name:name,amount:parseFloat(amt)||0,dueISO:dueISO,paid:false,recurring:recurring});logChange('bills','added',name);$('bill-name-in').value='';$('bill-amt-in').value='';$('bill-due-in').value='';if(recurEl)recurEl.checked=false;renderBills();saveAll();}
 
   // ══════════════════════════════════
   // MONEY TAB (no subs tab)
@@ -555,11 +557,11 @@ var OG = (function() {
   function renderNotes(){var list=$('notes-list');if(!notes.length){list.innerHTML='<div class="empty">Tap below to add a note</div>';return;}list.innerHTML=notes.map(function(n){var id=n.id;return'<div class="note-card"><textarea placeholder="Write something…" oninput="OG.saveNoteText(\''+id+'\',this.value)">'+esc(n.text)+'</textarea><div class="note-footer"><span class="note-time">'+esc(n.time)+'</span><span class="note-del" onclick="OG.deleteNote(\''+id+'\')">remove</span></div></div>';}).join('');}
   function saveNoteText(id,val){var i=findById(notes,id);if(i>=0){notes[i].text=val;clearTimeout(noteSaveTimer);noteSaveTimer=setTimeout(function(){saveAll();},800);}}
   function deleteNote(id){var removed=removeById(notes,id);if(removed)showUndo('Note','notes',removed);renderNotes();saveAll();}
-  function addNote(){var now=new Date();var time=now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});notes.unshift({id:uid('note'),text:'',time:time});renderNotes();saveAll();var ta=document.querySelector('.note-card textarea');if(ta)ta.focus();}
+  function addNote(){var now=new Date();var time=now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});notes.unshift({id:uid('note'),text:'',time:time});logChange('notes','added','New note');renderNotes();saveAll();var ta=document.querySelector('.note-card textarea');if(ta)ta.focus();}
   function renderGrocery(){var list=$('grocery-list');if(!groceryItems.length){list.innerHTML='<div class="empty">List is clear</div>';return;}list.innerHTML=groceryItems.map(function(item){var id=item.id;return'<div class="task-item" onclick="OG.toggleGrocery(\''+id+'\')"><div class="task-check'+(item.checked?' done':'')+'"></div><div class="task-text'+(item.checked?' done':'')+'">'+esc(item.text)+'</div><button class="del-btn" onclick="event.stopPropagation();OG.deleteGrocery(\''+id+'\')">×</button></div>';}).join('');}
   function toggleGrocery(id){var i=findById(groceryItems,id);if(i>=0){groceryItems[i].checked=!groceryItems[i].checked;renderGrocery();saveAll();}}
   function deleteGrocery(id){var removed=removeById(groceryItems,id);if(removed)showUndo(removed.text,'groceryItems',removed);renderGrocery();saveAll();}
-  function addGrocery(){var inp=$('grocery-in'),v=inp.value.trim();if(!v)return;groceryItems.push({id:uid('groc'),text:v,checked:false});inp.value='';renderGrocery();saveAll();}
+  function addGrocery(){var inp=$('grocery-in'),v=inp.value.trim();if(!v)return;groceryItems.push({id:uid('groc'),text:v,checked:false});logChange('groceryItems','added',v);inp.value='';renderGrocery();saveAll();}
   function renderDiscuss(){var list=$('discuss-list');if(!discussItems.length){list.innerHTML='<div class="empty">Nothing to discuss yet</div>';return;}list.innerHTML=discussItems.map(function(item){var id=item.id;return'<div class="task-item" onclick="OG.toggleDiscuss(\''+id+'\')"><div class="task-check'+(item.checked?' done':'')+'"></div><div class="task-text'+(item.checked?' done':'')+'">'+esc(item.text)+'</div><button class="del-btn" onclick="event.stopPropagation();OG.deleteDiscuss(\''+id+'\')">×</button></div>';}).join('');}
   function toggleDiscuss(id){var i=findById(discussItems,id);if(i>=0){discussItems[i].checked=!discussItems[i].checked;renderDiscuss();saveAll();}}
   function deleteDiscuss(id){var removed=removeById(discussItems,id);if(removed)showUndo(removed.text,'discussItems',removed);renderDiscuss();saveAll();}
@@ -619,8 +621,8 @@ var OG = (function() {
   // ══════════════════════════════════
   function advanceRecurringPlans(){var changed=false;plans.forEach(function(p){if(!p.recurring||!p.dateISO)return;var diff=daysDiff(p.dateISO);if(diff<0){var due=new Date(p.dateISO);due.setFullYear(due.getFullYear()+1);p.dateISO=due.toISOString();p.day=due.getDate().toString();p.mon=due.toLocaleDateString('en-US',{month:'short'}).toUpperCase();changed=true;}});if(changed)saveAll();}
   function renderPlans(){advanceRecurringPlans();var list=$('plans-list');if(!plans.length){list.innerHTML='<div class="empty">No events yet</div>';return;}var sorted=plans.slice().sort(function(a,b){return new Date(a.dateISO||0)-new Date(b.dateISO||0);});list.innerHTML=sorted.map(function(p){var id=p.id;return'<div class="event-item"><div class="event-date-block"><div class="event-day">'+esc(p.day)+'</div><div class="event-mon">'+esc(p.mon)+'</div></div><div style="flex:1;min-width:0;"><div class="event-title">'+esc(p.title)+'</div>'+(p.note?'<div class="event-desc">'+esc(p.note)+'</div>':'')+(p.recurring?'<span class="event-recurring">↻ yearly</span>':'')+'</div><button class="del-btn" onclick="OG.deletePlan(\''+id+'\')">×</button></div>';}).join('');}
-  function deletePlan(id){var i=findById(plans,id);if(i<0)return;var p=plans[i];confirmDelete(p.title,function(){removeById(plans,id);renderPlans();updateNextEvent();saveAll();});}
-  function addPlan(){var dateEl=$('plan-date'),title=$('plan-title').value.trim(),note=$('plan-note').value.trim();var recurEl=$('plan-recurring'),recurring=recurEl?recurEl.checked:false;if(!title)return;var dateISO='',day='—',mon='';if(dateEl.value){var d=new Date(dateEl.value+'T12:00:00');dateISO=d.toISOString();day=d.getDate().toString();mon=d.toLocaleDateString('en-US',{month:'short'}).toUpperCase();}plans.push({id:uid('plan'),title:title,note:note,dateISO:dateISO,day:day,mon:mon,recurring:recurring});dateEl.value='';$('plan-title').value='';$('plan-note').value='';if(recurEl)recurEl.checked=false;renderPlans();updateNextEvent();saveAll();}
+  function deletePlan(id){var i=findById(plans,id);if(i<0)return;var p=plans[i];logChange('plans','deleted',p.title);confirmDelete(p.title,function(){removeById(plans,id);renderPlans();updateNextEvent();saveAll();});}
+  function addPlan(){var dateEl=$('plan-date'),title=$('plan-title').value.trim(),note=$('plan-note').value.trim();var recurEl=$('plan-recurring'),recurring=recurEl?recurEl.checked:false;if(!title)return;var dateISO='',day='—',mon='';if(dateEl.value){var d=new Date(dateEl.value+'T12:00:00');dateISO=d.toISOString();day=d.getDate().toString();mon=d.toLocaleDateString('en-US',{month:'short'}).toUpperCase();}plans.push({id:uid('plan'),title:title,note:note,dateISO:dateISO,day:day,mon:mon,recurring:recurring});logChange('plans','added',title);dateEl.value='';$('plan-title').value='';$('plan-note').value='';if(recurEl)recurEl.checked=false;renderPlans();updateNextEvent();saveAll();}
   function updateNextEvent(){
     var upcoming=plans.filter(function(p){return p.dateISO&&daysDiff(p.dateISO)>=0;}).sort(function(a,b){return daysDiff(a.dateISO)-daysDiff(b.dateISO);});
     var el=$('dash-next-event');
@@ -669,9 +671,9 @@ var OG = (function() {
       return'<div class="chore-item" id="cr-'+id+'" onclick="OG.completeChore(\''+id+'\')"><div style="flex:1;min-width:0;"><div class="chore-text">'+esc(ch.text)+'</div><span class="chore-due '+dueCls+'">'+label+'</span> '+freqTag+'</div><span class="chore-owner '+ownerCls[owner]+'">'+ownerLbl[owner]+'</span>'+streakHtml+'<button class="del-btn" onclick="event.stopPropagation();OG.deleteChore(\''+id+'\')">×</button></div>';
     }).join('');
   }
-  function completeChore(id){var row=$('cr-'+id);if(row){row.style.transition='opacity 0.3s, transform 0.3s';row.style.opacity='0';row.style.transform='translateX(20px)';}setTimeout(function(){var i=findById(chores,id);if(i<0)return;var ch=chores[i];var prev=(ch.streak&&streakValid(ch))?ch.streak:0;ch.streak=prev+1;ch.lastDoneISO=new Date().toISOString();ch.nextDueISO=advanceChoreDate(ch);renderChores();renderDashToday();renderDashRecap();saveAll();},320);}
+  function completeChore(id){var row=$('cr-'+id);if(row){row.style.transition='opacity 0.3s, transform 0.3s';row.style.opacity='0';row.style.transform='translateX(20px)';}setTimeout(function(){var i=findById(chores,id);if(i<0)return;var ch=chores[i];var prev=(ch.streak&&streakValid(ch))?ch.streak:0;ch.streak=prev+1;ch.lastDoneISO=new Date().toISOString();ch.nextDueISO=advanceChoreDate(ch);logChange('chores','done',ch.text);renderChores();renderDashToday();renderDashRecap();saveAll();},320);}
   function deleteChore(id){var i=findById(chores,id);if(i<0)return;var ch=chores[i];confirmDelete(ch.text,function(){removeById(chores,id);renderChores();saveAll();});}
-  function addChore(){var inp=$('chore-in'),freq=$('chore-freq').value,dateIn=$('chore-date-in').value;var ownerEl=$('chore-owner-in'),owner=ownerEl?ownerEl.value:'both';var v=inp.value.trim();if(!v)return;var nextDueISO=dateIn?new Date(dateIn+'T12:00:00').toISOString():'';chores.push({id:uid('chor'),text:v,freq:freq,owner:owner,nextDueISO:nextDueISO,streak:0,lastDoneISO:''});inp.value='';$('chore-date-in').value='';renderChores();saveAll();}
+  function addChore(){var inp=$('chore-in'),freq=$('chore-freq').value,dateIn=$('chore-date-in').value;var ownerEl=$('chore-owner-in'),owner=ownerEl?ownerEl.value:'both';var v=inp.value.trim();if(!v)return;var nextDueISO=dateIn?new Date(dateIn+'T12:00:00').toISOString():'';chores.push({id:uid('chor'),text:v,freq:freq,owner:owner,nextDueISO:nextDueISO,streak:0,lastDoneISO:''});logChange('chores','added',v);inp.value='';$('chore-date-in').value='';renderChores();saveAll();}
   function renderProjects(){var list=$('projects-list');if(!projects.length){list.innerHTML='<div class="empty">No projects yet</div>';return;}list.innerHTML=projects.map(function(p){var id=p.id;return'<div class="task-item" onclick="OG.toggleProject(\''+id+'\')"><div class="task-check'+(p.done?' done':'')+'"></div><div class="task-text'+(p.done?' done':'')+'">'+esc(p.text)+'</div><button class="del-btn" onclick="event.stopPropagation();OG.deleteProject(\''+id+'\')">×</button></div>';}).join('');}
   function toggleProject(id){var i=findById(projects,id);if(i>=0){projects[i].done=!projects[i].done;renderProjects();saveAll();}}
   function deleteProject(id){var removed=removeById(projects,id);if(removed)showUndo(removed.text,'projects',removed);renderProjects();saveAll();}
