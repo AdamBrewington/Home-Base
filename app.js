@@ -557,7 +557,7 @@ var OG = (function() {
   // ══════════════════════════════════
   // MONEY TAB (no subs tab)
   // ══════════════════════════════════
-  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['bills','budget','mgoals','subs'].forEach(function(t){var el=$('money-'+t);if(el)el.style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();if(tab==='budget')renderBudgetTab();if(tab==='subs')renderSubs();}
+  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['bills','budget','mgoals'].forEach(function(t){var el=$('money-'+t);if(el)el.style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();if(tab==='budget')renderBudgetTab();}
   function renderSavingsGoals(){var list=$('savings-list');if(!goalsFinancial.length){list.innerHTML='<div class="empty">Add goals in the Goals tab</div>';return;}list.innerHTML=goalsFinancial.map(function(g){var pct=g.target>0?Math.min(100,Math.round(g.current/g.target*100)):0;var unit=g.unit||'$';var fmtC=unit==='$'?('$'+Number(g.current).toLocaleString()):(Number(g.current).toLocaleString()+' '+esc(unit));var fmtT=unit==='$'?('$'+Number(g.target).toLocaleString()):(Number(g.target).toLocaleString()+' '+esc(unit));return'<div class="goal-item"><div class="goal-top"><span class="goal-name">'+esc(g.name)+'</span><span class="goal-pct">'+pct+'%</span></div><div class="goal-bar-track"><div class="goal-bar-fill" style="width:'+pct+'%"></div></div><div class="goal-meta"><span>'+fmtC+' of '+fmtT+'</span></div></div>';}).join('');}
 
   // ══════════════════════════════════

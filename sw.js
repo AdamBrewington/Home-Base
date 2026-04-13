@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ourgrowth-v2.6.1';
+const CACHE_NAME = 'ourgrowth-v2.7';
 const ASSETS = [
   '/',
   '/index.html',
@@ -26,14 +26,31 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network-first for sync API calls
-  if (event.request.url.includes('workers.dev')) {
+  const url = event.request.url;
+
+  // Never cache sync API
+  if (url.includes('workers.dev')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
-  // Cache-first for app shell
+
+  // NETWORK-FIRST for app shell (HTML, JS, CSS) so updates are never stuck on cache
+  if (url.endsWith('.html') || url.endsWith('.js') || url.endsWith('.css') || url.endsWith('/') || url.includes('app.js') || url.includes('styles.css')) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (images, fonts)
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(response => {

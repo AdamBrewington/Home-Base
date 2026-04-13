@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=2.7">
 </head>
 <body>
 
@@ -135,7 +135,6 @@
       <button class="tab-pill active" onclick="OG.moneyTab('bills',this)">Bills</button>
       <button class="tab-pill" onclick="OG.moneyTab('budget',this)">Budget</button>
       <button class="tab-pill" onclick="OG.moneyTab('mgoals',this)">Goals</button>
-      <button class="tab-pill" onclick="OG.moneyTab('subs',this)">Subscriptions</button>
     </div>
     <div id="money-bills">
       <div class="section-title">This Month</div>
@@ -161,16 +160,6 @@
     </div>
     <div id="money-mgoals" style="display:none"><div class="section-title">Savings Goals</div><div class="card" id="savings-list"><div class="empty">Add goals in the Goals tab</div></div></div>
     <div id="money-budget" style="display:none"></div>
-    <div id="money-subs" style="display:none">
-      <div class="section-title">Subscriptions</div>
-      <div class="card" id="subs-list"><div class="empty">No subscriptions yet</div></div>
-      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
-        <input class="add-input" placeholder="Service…" id="sub-name-in" style="min-width:110px;">
-        <input class="add-input" placeholder="Owner…" id="sub-owner-in" style="max-width:100px;">
-        <input class="add-input" placeholder="$" id="sub-amt-in" style="max-width:60px;" type="number" inputmode="decimal">
-        <button class="add-btn" onclick="OG.addSub()">+</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -277,6 +266,6 @@
 </nav>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=2.7"></script>
 </body>
 </html>
